@@ -22,16 +22,18 @@ Digital voucher e-commerce store that accepts USDC stablecoin payments on Ethere
 ```bash
 cd voucher-shop
 npm install
-cp .env.example .env.local
+npm run setup:env
+```
+
+This copies committed test wallets from `config/test-wallets.env` into `.env.local`. See [`config/TEST_WALLETS.md`](config/TEST_WALLETS.md) for addresses and funding steps.
+
+To generate fresh wallets instead:
+
+```bash
 node scripts/generate-wallets.mjs
 ```
 
-Edit `.env.local` with the generated merchant address and keys.
-
-Fund the buyer wallet on Sepolia:
-
-1. Sepolia ETH for gas (any public faucet)
-2. USDC from the [Circle faucet](https://faucet.circle.com/) for Sepolia
+Edit `config/test-wallets.env` with the output if you rotate keys.
 
 ## Run
 

@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "setup:env": "node scripts/setup-env.mjs",
     "test:e2e": "node --env-file=.env.local scripts/fund-fork.mjs && node --env-file=.env.local scripts/e2e-purchase.mjs"
   },
   "dependencies": {
