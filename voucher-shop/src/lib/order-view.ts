@@ -72,6 +72,9 @@ export function toPublicOrder(order: Order): PublicOrder {
     createdAt: order.created_at,
     paidAt: order.paid_at,
     product: toPublicProduct(product),
-    voucherCodes: getVouchersByOrder(order.id).map((voucher) => voucher.code),
+    voucherCodes:
+      order.status === "paid"
+        ? getVouchersByOrder(order.id).map((voucher) => voucher.code)
+        : [],
   };
 }
