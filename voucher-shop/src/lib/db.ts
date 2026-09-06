@@ -163,7 +163,7 @@ function createDb() {
           item.theme
         );
         const productId = Number(result.lastInsertRowid);
-        for (let i = 0; i < 8; i += 1) {
+        for (let i = 0; i < 12; i += 1) {
           insertVoucher.run(
             productId,
             voucherCode(`${item.slug}:${i}`),
