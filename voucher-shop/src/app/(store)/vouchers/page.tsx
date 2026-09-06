@@ -6,8 +6,9 @@ export default function VouchersPage() {
   const products = listProducts().map(toPublicProduct);
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
-      <h1 className="text-3xl font-bold text-slate-900">All Digital Vouchers</h1>
-      <p className="mt-2 text-slate-500">
+      <p className="kicker">Build zone</p>
+      <h1 className="mt-3 text-4xl md:text-5xl">All digital vouchers</h1>
+      <p className="mt-3 max-w-2xl text-muted">
         Choose a brand, pay in USDC on Sepolia, and receive your codes instantly.
       </p>
       <div className="mt-8">

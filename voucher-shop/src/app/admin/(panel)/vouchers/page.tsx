@@ -19,15 +19,14 @@ export default async function ManageVouchersPage({
   return (
     <div>
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Manage Vouchers</h1>
+        <div>
+          <p className="kicker">Inventory</p>
+          <h1 className="mt-2 text-3xl">Manage vouchers</h1>
+        </div>
         <AddVoucherForm products={products} />
       </div>
       <form className="mt-6 flex gap-3" action="/admin/vouchers">
-        <select
-          name="status"
-          defaultValue={status}
-          className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm"
-        >
+        <select name="status" defaultValue={status} className="field field-auto">
           <option value="all">All statuses</option>
           <option value="available">Available</option>
           <option value="reserved">Reserved</option>
@@ -39,39 +38,34 @@ export default async function ManageVouchersPage({
           <span className="absolute left-3 top-1/2 -translate-y-1/2">
             <IconSearch />
           </span>
-          <input
-            name="q"
-            defaultValue={query}
-            placeholder="Search codes"
-            className="h-10 w-full rounded-lg border border-slate-200 pl-9 pr-3 text-sm"
-          />
+          <input name="q" defaultValue={query} placeholder="Search codes" className="field pl-9" />
         </label>
-        <button type="submit" className="h-10 rounded-lg border border-slate-200 px-4 text-sm">
+        <button type="submit" className="btn btn-ghost h-11">
           Filter
         </button>
       </form>
-      <div className="mt-6 overflow-hidden rounded-2xl border border-slate-100 bg-white">
-        <table className="min-w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-500">
+      <div className="panel mt-6 overflow-hidden">
+        <table className="data-table">
+          <thead>
             <tr>
-              <th className="px-4 py-3">Code</th>
-              <th className="px-4 py-3">Type</th>
-              <th className="px-4 py-3">Value</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">View</th>
+              <th>Code</th>
+              <th>Type</th>
+              <th>Value</th>
+              <th>Status</th>
+              <th>View</th>
             </tr>
           </thead>
           <tbody>
             {vouchers.map((row) => (
-              <tr key={row.id} className="border-t border-slate-100">
-                <td className="px-4 py-3 font-mono">{row.code}</td>
-                <td className="px-4 py-3">{row.product_name}</td>
-                <td className="px-4 py-3">${row.usd_value}</td>
-                <td className="px-4 py-3">
+              <tr key={row.id}>
+                <td className="font-mono text-green-hi">{row.code}</td>
+                <td>{row.product_name}</td>
+                <td>${row.usd_value}</td>
+                <td>
                   <StatusPill status={row.status} />
                 </td>
-                <td className="px-4 py-3">
-                  <Link href={`/admin/usage/${row.id}`} className="text-brand">
+                <td>
+                  <Link href={`/admin/usage/${row.id}`} className="text-green-hi">
                     View
                   </Link>
                 </td>

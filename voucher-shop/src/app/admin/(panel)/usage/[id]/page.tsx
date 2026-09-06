@@ -25,22 +25,20 @@ export default async function UsageDetailPage({
 
   return (
     <div className="max-w-xl">
-      <h1 className="text-2xl font-bold">Voucher usage</h1>
-      <dl className="mt-6 divide-y divide-slate-100 rounded-2xl border border-slate-100 bg-white">
+      <p className="kicker">Ledger</p>
+      <h1 className="mt-2 text-3xl">Voucher usage</h1>
+      <dl className="panel mt-6 divide-y divide-[var(--line-soft)]">
         {rows.map(([label, value]) => (
           <div key={label} className="flex items-center justify-between px-5 py-3 text-sm">
-            <dt className="text-slate-500">{label}</dt>
+            <dt className="eyebrow text-muted">{label}</dt>
             <dd className="font-medium">
               {label === "Status" ? <StatusPill status={String(value)} /> : value}
             </dd>
           </div>
         ))}
       </dl>
-      <Link
-        href="/admin/usage"
-        className="mt-6 inline-flex h-10 items-center rounded-lg border border-slate-200 px-4 text-sm"
-      >
-        Back to Usage History
+      <Link href="/admin/usage" className="btn btn-ghost mt-6">
+        Back to usage history
       </Link>
     </div>
   );

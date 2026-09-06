@@ -24,7 +24,7 @@ export function CopyButton({
     <button
       type="button"
       onClick={copy}
-      className={`inline-flex items-center gap-2 ${className}`}
+      className={`inline-flex items-center gap-2 text-green-hi hover:text-paper ${className}`}
       aria-label={label ?? "Copy"}
     >
       {label ? <span>{copied ? "Copied" : label}</span> : null}

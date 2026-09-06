@@ -7,43 +7,44 @@ export default function AdminDashboardPage() {
   const stats = voucherStats();
   const recent = listRecentActivity();
   const cards = [
-    { label: "Total Vouchers", value: stats.total, className: "bg-blue-50 text-brand" },
-    { label: "Available", value: stats.available, className: "bg-emerald-50 text-success" },
-    { label: "Used", value: stats.used, className: "bg-orange-50 text-warning" },
-    { label: "Expired", value: stats.expired, className: "bg-red-50 text-danger" },
+    { label: "Total Vouchers", value: stats.total, className: "text-green-hi" },
+    { label: "Available", value: stats.available, className: "text-green" },
+    { label: "Used", value: stats.used, className: "text-warning" },
+    { label: "Expired", value: stats.expired, className: "text-danger" },
   ];
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+      <p className="kicker">Mission control</p>
+      <h1 className="mt-2 text-3xl">Dashboard</h1>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => (
-          <div key={card.label} className={`rounded-2xl p-5 ${card.className}`}>
-            <p className="text-sm opacity-80">{card.label}</p>
-            <p className="mt-2 text-3xl font-bold">{card.value}</p>
+          <div key={card.label} className="panel p-5">
+            <p className="eyebrow text-muted">{card.label}</p>
+            <p className={`mt-2 text-3xl font-black ${card.className}`}>{card.value}</p>
           </div>
         ))}
       </div>
-      <h2 className="mt-10 text-lg font-semibold">Recent Activity</h2>
-      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-100 bg-white">
-        <table className="min-w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-500">
+      <h2 className="mt-10 text-2xl">Recent activity</h2>
+      <div className="panel mt-4 overflow-hidden">
+        <table className="data-table">
+          <thead>
             <tr>
-              <th className="px-4 py-3 font-medium">Time</th>
-              <th className="px-4 py-3 font-medium">Voucher Code</th>
-              <th className="px-4 py-3 font-medium">Type</th>
-              <th className="px-4 py-3 font-medium">Status</th>
+              <th>Time</th>
+              <th>Voucher Code</th>
+              <th>Type</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
             {recent.map((row) => (
-              <tr key={row.id} className="border-t border-slate-100">
-                <td className="px-4 py-3 text-slate-500">
+              <tr key={row.id}>
+                <td className="text-muted">
                   {formatDateTime(row.used_at ?? row.sold_at ?? row.created_at)}
                 </td>
-                <td className="px-4 py-3 font-mono">{row.code}</td>
-                <td className="px-4 py-3">{row.brand}</td>
-                <td className="px-4 py-3">
+                <td className="font-mono text-green-hi">{row.code}</td>
+                <td>{row.brand}</td>
+                <td>
                   <StatusPill status={row.status} />
                 </td>
               </tr>
@@ -51,7 +52,7 @@ export default function AdminDashboardPage() {
           </tbody>
         </table>
       </div>
-      <Link href="/admin/usage" className="mt-4 inline-block text-sm text-brand">
+      <Link href="/admin/usage" className="eyebrow mt-4 inline-block text-green-hi">
         View all usage history
       </Link>
     </div>

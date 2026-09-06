@@ -32,23 +32,19 @@ export function AddVoucherForm({ products }: { products: Product[] }) {
 
   return (
     <div>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white"
-      >
-        + Add Voucher
+      <button type="button" onClick={() => setOpen(true)} className="btn btn-primary">
+        + Add voucher
       </button>
-      {message ? <p className="mt-2 text-right text-sm text-success">{message}</p> : null}
+      {message ? <p className="mt-2 text-right text-sm text-green-hi">{message}</p> : null}
       {open ? (
-        <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/40 p-4">
-          <form onSubmit={addCodes} className="w-full max-w-md rounded-2xl bg-white p-6">
-            <h2 className="text-lg font-semibold">Add Voucher</h2>
-            <label className="mt-4 block text-sm">Product</label>
+        <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/70 p-4">
+          <form onSubmit={addCodes} className="panel w-full max-w-md p-6">
+            <h2 className="text-2xl">Add voucher</h2>
+            <label className="eyebrow mt-4 block">Product</label>
             <select
               value={productId}
               onChange={(event) => setProductId(Number(event.target.value))}
-              className="mt-1 h-10 w-full rounded-lg border border-slate-200 px-3"
+              className="field mt-2"
             >
               {products.map((product) => (
                 <option key={product.id} value={product.id}>
@@ -56,18 +52,18 @@ export function AddVoucherForm({ products }: { products: Product[] }) {
                 </option>
               ))}
             </select>
-            <label className="mt-4 block text-sm">Codes (one per line)</label>
+            <label className="eyebrow mt-4 block">Codes (one per line)</label>
             <textarea
               value={codes}
               onChange={(event) => setCodes(event.target.value)}
               rows={5}
-              className="mt-1 w-full rounded-lg border border-slate-200 p-3 font-mono text-sm"
+              className="field mt-2 h-auto py-3 font-mono text-sm"
             />
             <div className="mt-4 flex justify-end gap-2">
-              <button type="button" onClick={() => setOpen(false)} className="h-10 rounded-lg px-4 text-sm">
+              <button type="button" onClick={() => setOpen(false)} className="btn btn-ghost h-10">
                 Cancel
               </button>
-              <button type="submit" className="h-10 rounded-lg bg-brand px-4 text-sm font-semibold text-white">
+              <button type="submit" className="btn btn-primary h-10">
                 Add
               </button>
             </div>

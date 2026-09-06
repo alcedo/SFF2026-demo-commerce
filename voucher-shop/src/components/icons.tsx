@@ -1,18 +1,18 @@
 export function GiftLogo({ className = "h-8 w-8" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" className={className} aria-hidden="true">
-      <rect x="2" y="10" width="28" height="18" rx="4" fill="#0066FF" />
-      <rect x="2" y="10" width="28" height="6" fill="#3385FF" />
-      <rect x="14" y="10" width="4" height="18" fill="#FFFFFF" opacity="0.9" />
-      <path d="M16 10c-4-6-9-1-7 3h7V10Z" fill="#FF4D6D" />
-      <path d="M16 10c4-6 9-1 7 3h-7V10Z" fill="#FF8A3D" />
+    <svg viewBox="0 0 36 36" className={className} aria-hidden="true">
+      <path d="M8 0h28v28L28 36H0V8L8 0Z" fill="#00D37E" />
+      <path
+        d="M11 9h4.2l2.8 4.6L20.8 9H25l-5.1 7.4L25 24h-4.3l-2.7-4.7L15.2 24H11l5.2-7.6L11 9Z"
+        fill="#050505"
+      />
     </svg>
   );
 }
 
 export function IconBolt() {
   return (
-    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-brand">
+    <span className="icon-well">
       <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor">
         <path d="M13 2 4 14h7l-1 8 10-14h-7l0-6Z" />
       </svg>
@@ -22,7 +22,7 @@ export function IconBolt() {
 
 export function IconClock() {
   return (
-    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-brand">
+    <span className="icon-well">
       <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2">
         <circle cx="12" cy="12" r="8" />
         <path d="M12 8v5l3 2" />
@@ -33,7 +33,7 @@ export function IconClock() {
 
 export function IconShield() {
   return (
-    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-brand">
+    <span className="icon-well">
       <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z" />
         <path d="m9 12 2 2 4-4" />
@@ -44,7 +44,7 @@ export function IconShield() {
 
 export function IconGlobe() {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5 text-brand" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg viewBox="0 0 24 24" className="h-5 w-5 text-green-hi" fill="none" stroke="currentColor" strokeWidth="2">
       <circle cx="12" cy="12" r="9" />
       <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
     </svg>
@@ -53,7 +53,7 @@ export function IconGlobe() {
 
 export function IconBan() {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5 text-brand" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg viewBox="0 0 24 24" className="h-5 w-5 text-green-hi" fill="none" stroke="currentColor" strokeWidth="2">
       <circle cx="12" cy="12" r="9" />
       <path d="m7 7 10 10" />
     </svg>
@@ -62,7 +62,7 @@ export function IconBan() {
 
 export function IconLock() {
   return (
-    <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-brand">
+    <span className="icon-well h-14 w-14">
       <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2">
         <rect x="5" y="11" width="14" height="10" rx="2" />
         <path d="M8 11V8a4 4 0 0 1 8 0v3" />
@@ -91,8 +91,8 @@ export function IconCheck({ className = "h-5 w-5" }: { className?: string }) {
 export function Spinner({ className = "h-5 w-5" }: { className?: string }) {
   return (
     <svg className={`spin-slow ${className}`} viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="9" stroke="#bfdbfe" strokeWidth="3" />
-      <path d="M21 12a9 9 0 0 0-9-9" stroke="#0066FF" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="12" cy="12" r="9" stroke="rgba(0,211,126,0.25)" strokeWidth="3" />
+      <path d="M21 12a9 9 0 0 0-9-9" stroke="#00FF99" strokeWidth="3" strokeLinecap="round" />
     </svg>
   );
 }
@@ -145,7 +145,7 @@ export function IconLogout() {
 
 export function IconSearch() {
   return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg viewBox="0 0 24 24" className="h-4 w-4 text-faint" fill="none" stroke="currentColor" strokeWidth="2">
       <circle cx="11" cy="11" r="7" />
       <path d="m20 20-3-3" />
     </svg>

@@ -27,14 +27,19 @@ export function GiftCardArt({
   const style = themes[(theme as CardTheme) ?? "amazon"] ?? themes.amazon;
   return (
     <div
-      className={`relative overflow-hidden rounded-xl shadow-md ${className}`}
+      className={`notch-md relative overflow-hidden ${className}`}
       style={{ background: style.bg, color: style.fg }}
     >
-      <div className="absolute inset-0 opacity-20" style={{ background: `radial-gradient(circle at 80% 20%, ${style.accent}, transparent 50%)` }} />
+      <div
+        className="absolute inset-0 opacity-20"
+        style={{ background: `radial-gradient(circle at 80% 20%, ${style.accent}, transparent 50%)` }}
+      />
       <div className="relative flex h-full min-h-[140px] flex-col justify-between p-4">
-        <div className="text-xs font-semibold tracking-wide opacity-80">Gift Card</div>
-        <div className="text-lg font-bold tracking-tight">{style.mark}</div>
-        <div className="text-2xl font-semibold">${usdValue}</div>
+        <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] opacity-80">
+          Gift Card
+        </div>
+        <div className="text-lg font-black tracking-tight">{style.mark}</div>
+        <div className="text-2xl font-black">${usdValue}</div>
       </div>
     </div>
   );

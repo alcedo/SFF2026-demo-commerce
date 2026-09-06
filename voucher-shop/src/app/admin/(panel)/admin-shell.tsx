@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { AgentixMark } from "@/components/agentix-mark";
 import {
-  GiftLogo,
   IconDashboard,
   IconHistory,
   IconLogout,
@@ -28,11 +28,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <aside className="flex w-60 flex-col border-r border-slate-200 bg-white">
-        <Link href="/" className="flex items-center gap-2 px-5 py-5 font-semibold">
-          <GiftLogo className="h-7 w-7" />
-          VoucherShop
+    <div className="flex min-h-screen bg-ink">
+      <aside className="flex w-60 flex-col border-r border-line-soft bg-ink-1">
+        <Link href="/" className="flex items-center gap-2 px-5 py-5">
+          <AgentixMark className="h-7 w-7" />
+          <span className="leading-none">
+            <span className="block text-sm font-black tracking-tight text-green-hi">AgentiX</span>
+            <span className="eyebrow text-[10px] text-muted">Admin</span>
+          </span>
         </Link>
         <nav className="flex-1 space-y-1 px-3">
           {links.map((link) => {
@@ -43,8 +46,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ${
-                  active ? "bg-blue-50 text-brand" : "text-slate-600 hover:bg-slate-50"
+                className={`flex items-center gap-3 px-3 py-2 text-sm font-medium notch-sm ${
+                  active
+                    ? "bg-[rgba(0,255,153,0.1)] text-green-hi"
+                    : "text-muted hover:bg-ink-3 hover:text-paper"
                 }`}
               >
                 <Icon />
@@ -56,7 +61,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <button
           type="button"
           onClick={logout}
-          className="m-3 flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"
+          className="m-3 flex items-center gap-3 px-3 py-2 text-left text-sm text-muted hover:bg-ink-3 hover:text-paper notch-sm"
         >
           <IconLogout />
           Logout

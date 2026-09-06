@@ -17,16 +17,19 @@ export default async function ProductPage({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
-      <Link href="/vouchers" className="text-sm text-brand hover:underline">
+      <Link href="/vouchers" className="eyebrow text-green-hi hover:text-paper">
         ← Back to vouchers
       </Link>
       <div className="mt-8 grid gap-10 md:grid-cols-2">
         <GiftCardArt theme={product.theme} usdValue={product.usdValue} className="min-h-[280px]" />
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">{product.name}</h1>
-          <p className="mt-2 text-slate-500">${product.usdValue} USD</p>
-          <p className="mt-1 text-2xl font-bold text-brand">{product.priceUsdc} USDC</p>
-          <p className="mt-4 text-sm leading-6 text-slate-600">{product.description}</p>
+          <p className="kicker">{product.category}</p>
+          <h1 className="mt-3 text-4xl">{product.name}</h1>
+          <p className="mt-3 font-mono text-sm uppercase tracking-[0.16em] text-muted">
+            ${product.usdValue} USD
+          </p>
+          <p className="mt-2 text-2xl font-black text-green-hi">{product.priceUsdc} USDC</p>
+          <p className="mt-4 text-sm leading-6 text-muted">{product.description}</p>
           <div className="mt-8">
             <BuyPanel product={product} />
           </div>

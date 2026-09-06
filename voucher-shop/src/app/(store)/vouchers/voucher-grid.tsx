@@ -34,13 +34,13 @@ export function VoucherGrid({ products }: { products: PublicProduct[] }) {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search vouchers..."
-            className="h-11 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-brand"
+            className="field pl-9"
           />
         </label>
         <select
           value={category}
           onChange={(event) => setCategory(event.target.value)}
-          className="h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm"
+          className="field field-auto sm:min-w-56"
         >
           <option>All Categories</option>
           {CATEGORIES.map((item) => (

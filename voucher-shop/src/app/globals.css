@@ -1,35 +1,124 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #1f2937;
-  --brand: #0066ff;
-  --brand-dark: #0052cc;
-  --success: #16a34a;
-  --warning: #d97706;
-  --danger: #dc2626;
+  --ink: #050505;
+  --green: #00d37e;
+  --green-hi: #00ff99;
+  --ink-1: #080c0a;
+  --ink-2: #0b120f;
+  --ink-3: #111a16;
+  --paper: #e4f7ee;
+  --muted: rgba(228, 247, 238, 0.6);
+  --faint: rgba(228, 247, 238, 0.34);
+  --line: rgba(0, 211, 126, 0.24);
+  --line-soft: rgba(228, 247, 238, 0.1);
+  --glass: rgba(7, 17, 13, 0.62);
+  --glass-hi: rgba(0, 255, 153, 0.05);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --notch: 14px;
+  --notch-lg: 11px;
+  --notch-md: 9px;
+  --notch-sm: 7px;
+  --background: var(--ink);
+  --foreground: var(--paper);
+  --brand: var(--green);
+  --brand-dark: #00b86e;
+  --success: var(--green);
+  --warning: #f5c15c;
+  --danger: #ff6b7a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-ink: var(--ink);
+  --color-ink-1: var(--ink-1);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-paper: var(--paper);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-glass: var(--glass);
+  --color-glass-hi: var(--glass-hi);
+  --color-green: var(--green);
+  --color-green-hi: var(--green-hi);
   --color-brand: var(--brand);
   --color-brand-dark: var(--brand-dark);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
-  --font-sans: var(--font-inter);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-display);
+  --font-mono: var(--font-redhat-mono);
+  --font-display: var(--font-display);
 }
 
 html {
-  color-scheme: light;
+  color-scheme: dark;
+}
+
+* {
+  scrollbar-color: var(--green) var(--ink-2);
+}
+
+::selection {
+  background: var(--green);
+  color: var(--ink);
 }
 
 body {
-  background: #ffffff;
-  color: var(--foreground);
-  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 400;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(0, 211, 126, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 211, 126, 0.045) 1px, transparent 1px),
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 211, 126, 0.16), transparent 58%);
+  background-size:
+    48px 48px,
+    48px 48px,
+    auto;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.35) 70%, rgba(0, 0, 0, 0.55));
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+}
+
+a {
+  text-decoration: none;
+}
+
+input,
+textarea,
+select {
+  color: var(--paper);
+}
+
+option {
+  background: var(--ink-2);
+  color: var(--paper);
 }
 
 @keyframes spin-slow {
@@ -40,4 +129,245 @@ body {
 
 .spin-slow {
   animation: spin-slow 1.1s linear infinite;
+}
+
+.notch {
+  clip-path: polygon(
+    var(--notch) 0,
+    100% 0,
+    100% calc(100% - var(--notch)),
+    calc(100% - var(--notch)) 100%,
+    0 100%,
+    0 var(--notch)
+  );
+}
+
+.notch-lg {
+  clip-path: polygon(
+    var(--notch-lg) 0,
+    100% 0,
+    100% calc(100% - var(--notch-lg)),
+    calc(100% - var(--notch-lg)) 100%,
+    0 100%,
+    0 var(--notch-lg)
+  );
+}
+
+.notch-md {
+  clip-path: polygon(
+    var(--notch-md) 0,
+    100% 0,
+    100% calc(100% - var(--notch-md)),
+    calc(100% - var(--notch-md)) 100%,
+    0 100%,
+    0 var(--notch-md)
+  );
+}
+
+.notch-sm {
+  clip-path: polygon(
+    var(--notch-sm) 0,
+    100% 0,
+    100% calc(100% - var(--notch-sm)),
+    calc(100% - var(--notch-sm)) 100%,
+    0 100%,
+    0 var(--notch-sm)
+  );
+}
+
+.kicker {
+  font-family: var(--font-redhat-mono), ui-monospace, monospace;
+  font-size: 0.74rem;
+  font-weight: 400;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+.eyebrow {
+  font-family: var(--font-redhat-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--green-hi);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line-soft);
+  color: var(--muted);
+  font-family: var(--font-redhat-mono), ui-monospace, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 0.45rem 0.8rem;
+  clip-path: polygon(
+    var(--notch-sm) 0,
+    100% 0,
+    100% calc(100% - var(--notch-sm)),
+    calc(100% - var(--notch-sm)) 100%,
+    0 100%,
+    0 var(--notch-sm)
+  );
+}
+
+.panel {
+  background: var(--glass);
+  border: 1px solid var(--line);
+  clip-path: polygon(
+    var(--notch) 0,
+    100% 0,
+    100% calc(100% - var(--notch)),
+    calc(100% - var(--notch)) 100%,
+    0 100%,
+    0 var(--notch)
+  );
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  border: 1px solid var(--green);
+  font-family: var(--font-redhat-mono), ui-monospace, monospace;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition:
+    box-shadow 0.2s var(--ease),
+    background 0.2s var(--ease),
+    color 0.2s var(--ease),
+    border-color 0.2s var(--ease);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.btn-primary {
+  background: var(--green);
+  color: var(--ink);
+  padding: 0.9rem 1.6rem;
+  font-size: 0.82rem;
+  clip-path: polygon(
+    var(--notch-lg) 0,
+    100% 0,
+    100% calc(100% - var(--notch-lg)),
+    calc(100% - var(--notch-lg)) 100%,
+    0 100%,
+    0 var(--notch-lg)
+  );
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--green-hi);
+  box-shadow: 0 0 22px rgba(0, 255, 153, 0.32);
+}
+
+.btn-ghost {
+  background: rgba(0, 255, 153, 0.1);
+  color: var(--green-hi);
+  border-color: rgba(0, 255, 153, 0.55);
+  padding: 0.75rem 1.15rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  clip-path: polygon(
+    var(--notch-md) 0,
+    100% 0,
+    100% calc(100% - var(--notch-md)),
+    calc(100% - var(--notch-md)) 100%,
+    0 100%,
+    0 var(--notch-md)
+  );
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: rgba(0, 255, 153, 0.18);
+  box-shadow: 0 0 16px rgba(0, 255, 153, 0.18);
+}
+
+.field {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid var(--line-soft);
+  background: var(--ink-2);
+  color: var(--paper);
+  padding: 0 0.85rem;
+  font-size: 0.9rem;
+  outline: none;
+  clip-path: polygon(
+    var(--notch-sm) 0,
+    100% 0,
+    100% calc(100% - var(--notch-sm)),
+    calc(100% - var(--notch-sm)) 100%,
+    0 100%,
+    0 var(--notch-sm)
+  );
+}
+
+.field:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 1px rgba(0, 211, 126, 0.35);
+}
+
+.field-auto {
+  width: auto;
+}
+
+.icon-well {
+  display: flex;
+  height: 3rem;
+  width: 3rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  background: var(--glass-hi);
+  color: var(--green-hi);
+  clip-path: polygon(
+    var(--notch-sm) 0,
+    100% 0,
+    100% calc(100% - var(--notch-sm)),
+    calc(100% - var(--notch-sm)) 100%,
+    0 100%,
+    0 var(--notch-sm)
+  );
+}
+
+.data-table {
+  width: 100%;
+  text-align: left;
+  font-size: 0.875rem;
+}
+
+.data-table thead {
+  background: var(--ink-3);
+  color: var(--muted);
+  font-family: var(--font-redhat-mono), ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.85rem 1rem;
+}
+
+.data-table tbody tr {
+  border-top: 1px solid var(--line-soft);
+}
+
+.glow-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--green-hi);
+  box-shadow: 0 0 12px var(--green-hi);
 }

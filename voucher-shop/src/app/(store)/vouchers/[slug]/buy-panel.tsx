@@ -37,7 +37,7 @@ export function BuyPanel({ product }: { product: PublicProduct }) {
 
   return (
     <div>
-      <ul className="space-y-3 text-sm text-slate-600">
+      <ul className="space-y-3 text-sm text-muted">
         <li className="flex items-center gap-2">
           <IconClock /> Instant delivery
         </li>
@@ -50,35 +50,27 @@ export function BuyPanel({ product }: { product: PublicProduct }) {
       </ul>
 
       <div className="mt-8 flex items-center justify-center gap-4">
-        <button
-          type="button"
-          onClick={() => bump(-1)}
-          className="h-10 w-10 rounded-lg border border-slate-200 text-lg"
-        >
+        <button type="button" onClick={() => bump(-1)} className="btn btn-ghost h-10 w-10 px-0">
           −
         </button>
-        <span className="w-8 text-center text-lg font-semibold">{quantity}</span>
-        <button
-          type="button"
-          onClick={() => bump(1)}
-          className="h-10 w-10 rounded-lg border border-slate-200 text-lg"
-        >
+        <span className="w-8 text-center text-lg font-black">{quantity}</span>
+        <button type="button" onClick={() => bump(1)} className="btn btn-ghost h-10 w-10 px-0">
           +
         </button>
       </div>
 
-      <div className="mt-4 flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm">
-        <span className="text-slate-500">Total</span>
-        <span className="font-bold text-brand">{total} USDC</span>
+      <div className="panel mt-4 flex items-center justify-between px-4 py-3 text-sm">
+        <span className="eyebrow text-muted">Total</span>
+        <span className="font-black text-green-hi">{total} USDC</span>
       </div>
 
       <button
         type="button"
         onClick={buy}
         disabled={loading || product.available < 1}
-        className="mt-4 flex h-12 w-full items-center justify-center rounded-lg bg-brand text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+        className="btn btn-primary mt-4 h-12 w-full"
       >
-        {loading ? "Creating order..." : `Buy Now (${total} USDC)`}
+        {loading ? "Creating order..." : `Buy now · ${total} USDC`}
       </button>
       {error ? <p className="mt-3 text-sm text-danger">{error}</p> : null}
     </div>

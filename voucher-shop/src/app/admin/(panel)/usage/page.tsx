@@ -6,29 +6,30 @@ export default function UsageHistoryPage() {
   const rows = listVouchers();
   return (
     <div>
-      <h1 className="text-2xl font-bold">Usage History</h1>
-      <div className="mt-6 overflow-hidden rounded-2xl border border-slate-100 bg-white">
-        <table className="min-w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-500">
+      <p className="kicker">Ledger</p>
+      <h1 className="mt-2 text-3xl">Usage history</h1>
+      <div className="panel mt-6 overflow-hidden">
+        <table className="data-table">
+          <thead>
             <tr>
-              <th className="px-4 py-3">Code</th>
-              <th className="px-4 py-3">Type</th>
-              <th className="px-4 py-3">Value</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">View</th>
+              <th>Code</th>
+              <th>Type</th>
+              <th>Value</th>
+              <th>Status</th>
+              <th>View</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.id} className="border-t border-slate-100">
-                <td className="px-4 py-3 font-mono">{row.code}</td>
-                <td className="px-4 py-3">{row.product_name}</td>
-                <td className="px-4 py-3">${row.usd_value}</td>
-                <td className="px-4 py-3">
+              <tr key={row.id}>
+                <td className="font-mono text-green-hi">{row.code}</td>
+                <td>{row.product_name}</td>
+                <td>${row.usd_value}</td>
+                <td>
                   <StatusPill status={row.status} />
                 </td>
-                <td className="px-4 py-3">
-                  <Link href={`/admin/usage/${row.id}`} className="text-brand">
+                <td>
+                  <Link href={`/admin/usage/${row.id}`} className="text-green-hi">
                     View
                   </Link>
                 </td>

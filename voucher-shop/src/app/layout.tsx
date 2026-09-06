@@ -1,32 +1,32 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Geist_Mono, Inter } from "next/font/google";
+import { Red_Hat_Display, Red_Hat_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 
-const inter = Inter({
-  variable: "--font-inter",
+const display = Red_Hat_Display({
+  variable: "--font-display",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const redHatMono = Red_Hat_Mono({
+  variable: "--font-redhat-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "VoucherShop | Buy Digital Vouchers with USDC",
+  title: "AgentiX Playground · Digital Vouchers",
   description:
-    "Buy digital gift cards with USDC on Sepolia. Fast, simple, and secure.",
+    "Where agents learn to pay. Buy digital vouchers with USDC on live stablecoin rails.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${display.variable} ${redHatMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-white text-slate-800">
+      <body className="min-h-full bg-ink text-paper">
         <Providers>{children}</Providers>
       </body>
     </html>

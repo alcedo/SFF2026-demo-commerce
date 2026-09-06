@@ -51,21 +51,22 @@ export default function ProcessingPage() {
   return (
     <div className="mx-auto flex max-w-md flex-col items-center px-4 py-20 text-center">
       <Spinner className="h-16 w-16" />
-      <h1 className="mt-8 text-2xl font-bold text-slate-900">Detecting your payment...</h1>
+      <p className="kicker mt-8">Validation</p>
+      <h1 className="mt-3 text-3xl">Detecting your payment...</h1>
       <ul className="mt-8 w-full space-y-3 text-left text-sm">
         {steps.map((label, index) => {
           const complete = index < done;
           const current = index === done && ready;
           return (
-            <li key={label} className="flex items-center gap-3">
+            <li key={label} className="panel flex items-center gap-3 px-3 py-3">
               <span
-                className={`flex h-6 w-6 items-center justify-center rounded-full ${
-                  complete ? "bg-success text-white" : "border border-slate-200 text-slate-400"
+                className={`flex h-6 w-6 items-center justify-center notch-sm ${
+                  complete ? "bg-green text-ink" : "border border-line text-faint"
                 }`}
               >
-                {complete ? <IconCheck /> : current ? <Spinner className="h-4 w-4" /> : null}
+                {complete ? <IconCheck className="h-4 w-4" /> : current ? <Spinner className="h-4 w-4" /> : null}
               </span>
-              <span className={complete ? "text-slate-800" : "text-slate-500"}>{label}</span>
+              <span className={complete ? "text-paper" : "text-muted"}>{label}</span>
             </li>
           );
         })}

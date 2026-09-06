@@ -6,6 +6,29 @@ import { POPULAR_SLUGS } from "@/lib/catalog";
 import { listProducts } from "@/lib/db";
 import { toPublicProduct } from "@/lib/order-view";
 
+const tags = ["Developers", "AI Agents", "Stablecoins", "Programmable Payments"];
+
+const features = [
+  {
+    n: "01",
+    title: "Pay with USDC",
+    body: "Sepolia testnet stablecoin on trusted rails.",
+    icon: IconBolt,
+  },
+  {
+    n: "02",
+    title: "Instant delivery",
+    body: "Codes unlock the moment payment confirms.",
+    icon: IconClock,
+  },
+  {
+    n: "03",
+    title: "Trusted checks",
+    body: "On-chain transfer verification before reveal.",
+    icon: IconShield,
+  },
+];
+
 export default function HomePage() {
   const products = listProducts().map(toPublicProduct);
   const popular = products.filter((product) =>
@@ -14,58 +37,80 @@ export default function HomePage() {
 
   return (
     <div>
-      <section className="border-b border-slate-100 bg-gradient-to-b from-slate-50 to-white">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 md:grid-cols-2">
+      <section className="relative overflow-hidden border-b border-line-soft">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 md:grid-cols-[1.1fr_0.9fr] md:py-20">
           <div>
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900 md:text-5xl">
-              Buy Digital Vouchers with Stablecoin
+            <p className="kicker">Singapore · 2026</p>
+            <div className="mt-5 inline-flex items-center gap-2 tag">
+              <span className="glow-dot" />
+              First public activation
+            </div>
+            <h1 className="mt-6 text-4xl text-paper md:text-6xl">
+              Buy digital vouchers
+              <span className="block text-green-hi">with stablecoin.</span>
             </h1>
-            <p className="mt-4 max-w-lg text-slate-500">
-              Fast, simple, and secure. Pay with USDC on Sepolia testnet and get your
-              voucher instantly.
+            <p className="mt-5 max-w-lg text-sm leading-7 text-muted md:text-base">
+              Fast, simple, and on-chain. Pay with USDC on Sepolia and receive
+              voucher codes the moment the transfer confirms.
             </p>
-            <Link
-              href="/vouchers"
-              className="mt-8 inline-flex h-11 items-center rounded-lg bg-brand px-5 text-sm font-semibold text-white hover:bg-brand-dark"
-            >
-              Browse vouchers
-            </Link>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {tags.map((tag) => (
+                <span key={tag} className="tag">
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link href="/vouchers" className="btn btn-primary">
+                Enter voucher rails
+              </Link>
+              <Link href="/how-it-works" className="btn btn-ghost">
+                How it works
+              </Link>
+            </div>
+            <p className="eyebrow mt-8 text-faint">Powered by</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {["StraitsX", "USDC", "Sepolia", "AgentiX rails"].map((item) => (
+                <span key={item} className="tag">
+                  {item}
+                </span>
+              ))}
+            </div>
           </div>
-          <div className="relative mx-auto h-64 w-full max-w-sm">
-            <div className="absolute left-8 top-6 w-56 rotate-[-8deg] shadow-xl">
+          <div className="relative mx-auto h-72 w-full max-w-sm">
+            <div className="absolute left-6 top-4 w-56 rotate-[-8deg] shadow-[0_0_40px_rgba(0,211,126,0.18)]">
               <GiftCardArt theme="amazon" usdValue={25} className="h-36" />
             </div>
-            <div className="absolute right-4 top-16 w-56 rotate-[10deg] shadow-xl">
+            <div className="absolute right-2 top-16 w-56 rotate-[10deg] shadow-[0_0_40px_rgba(0,255,153,0.12)]">
               <GiftCardArt theme="netflix" usdValue={15} className="h-36" />
             </div>
-            <div className="absolute bottom-0 left-16 flex h-16 w-16 items-center justify-center rounded-full bg-brand text-xl font-bold text-white shadow-lg">
+            <div className="absolute bottom-2 left-14 flex h-16 w-16 items-center justify-center bg-green font-mono text-xl font-bold text-ink notch-md">
               $
             </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-6xl gap-8 px-4 py-14 md:grid-cols-3">
-        <div className="flex flex-col items-center text-center">
-          <IconBolt />
-          <h2 className="mt-4 font-semibold">Pay with USDC</h2>
-          <p className="mt-1 text-sm text-slate-500">Sepolia testnet stablecoin</p>
-        </div>
-        <div className="flex flex-col items-center text-center">
-          <IconClock />
-          <h2 className="mt-4 font-semibold">Instant Delivery</h2>
-          <p className="mt-1 text-sm text-slate-500">Codes after payment confirms</p>
-        </div>
-        <div className="flex flex-col items-center text-center">
-          <IconShield />
-          <h2 className="mt-4 font-semibold">Trusted & Secure</h2>
-          <p className="mt-1 text-sm text-slate-500">On-chain payment checks</p>
-        </div>
+      <section className="mx-auto grid max-w-6xl gap-4 px-4 py-14 md:grid-cols-3">
+        {features.map((feature) => {
+          const Icon = feature.icon;
+          return (
+            <div key={feature.n} className="panel p-6">
+              <div className="flex items-center justify-between">
+                <Icon />
+                <span className="font-mono text-sm tracking-[0.2em] text-green">{feature.n}</span>
+              </div>
+              <h2 className="mt-5 text-2xl">{feature.title}</h2>
+              <p className="mt-2 text-sm text-muted">{feature.body}</p>
+            </div>
+          );
+        })}
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-16">
-        <h2 className="text-2xl font-bold text-slate-900">Popular Vouchers</h2>
-        <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <p className="kicker">Catalog</p>
+        <h2 className="mt-3 text-3xl md:text-4xl">Popular vouchers</h2>
+        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {popular.map((product) => (
             <VoucherCard key={product.id} product={product} />
           ))}
