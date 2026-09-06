@@ -1,19 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  fulfillOrder,
-  getOrder,
-  getVoucherByOrder,
-  setOrderTxHash,
-} from "@/lib/db";
+import { fulfillOrder, getOrder, setOrderTxHash } from "@/lib/db";
+import { toPublicOrder } from "@/lib/order-view";
 import { verifyUsdcPayment } from "@/lib/payment";
-import { fromMicroUsdc } from "@/lib/config";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const body = await request.json();
+  const body = (await request.json()) as Record<string, unknown>;
   const txHash = body.txHash as `0x${string}` | undefined;
 
   const order = getOrder(id);
@@ -22,14 +17,7 @@ export async function POST(
   }
 
   if (order.status === "paid") {
-    const voucher = getVoucherByOrder(id);
-    return NextResponse.json({
-      order: {
-        id: order.id,
-        status: order.status,
-        voucherCode: voucher?.code ?? null,
-      },
-    });
+    return NextResponse.json({ order: toPublicOrder(order) });
   }
 
   if (!txHash) {
@@ -48,15 +36,5 @@ export async function POST(
 
   setOrderTxHash(id, txHash);
   fulfillOrder(id);
-  const updated = getVoucherByOrder(id);
-
-  return NextResponse.json({
-    order: {
-      id: order.id,
-      status: "paid",
-      amountUsdc: fromMicroUsdc(order.amount_micro),
-      voucherCode: updated?.code ?? null,
-      txHash,
-    },
-  });
+  return NextResponse.json({ order: toPublicOrder(getOrder(id)!) });
 }

@@ -1,55 +1,34 @@
-import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import {
-  claimAvailableVoucher,
-  createOrder,
-  fulfillOrder,
-  getOrder,
-  getProduct,
-  getVoucherByOrder,
-  setOrderTxHash,
-} from "@/lib/db";
-import { verifyUsdcPayment } from "@/lib/payment";
-import { fromMicroUsdc, MERCHANT_ADDRESS, USDC_ADDRESS } from "@/lib/config";
+import { NextRequest, NextResponse } from "next/server";
+import { createOrder, getOrder, getProduct, getProductBySlug } from "@/lib/db";
+import { toPublicOrder } from "@/lib/order-view";
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const productId = Number(body.productId);
-  const buyerAddress = body.buyerAddress as string | undefined;
+  const body = (await request.json()) as Record<string, unknown>;
+  const quantity = Number(body.quantity ?? 1);
+  const product =
+    typeof body.slug === "string"
+      ? getProductBySlug(body.slug)
+      : getProduct(Number(body.productId));
 
-  const product = getProduct(productId);
   if (!product || !product.active) {
     return NextResponse.json({ error: "Product not found" }, { status: 404 });
   }
 
-  const available = claimAvailableVoucher(productId);
-  if (!available) {
-    return NextResponse.json(
-      { error: "No vouchers in stock for this product" },
-      { status: 409 }
-    );
+  try {
+    const order = createOrder({
+      id: randomUUID(),
+      productId: product.id,
+      quantity,
+      buyerAddress:
+        typeof body.buyerAddress === "string" ? body.buyerAddress : undefined,
+    });
+    return NextResponse.json({ order: toPublicOrder(order) });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Could not create order";
+    const status = message.includes("stock") ? 409 : 400;
+    return NextResponse.json({ error: message }, { status });
   }
-
-  const orderId = randomUUID();
-  const order = createOrder({
-    id: orderId,
-    productId,
-    buyerAddress,
-    amountMicro: product.price_micro,
-    voucherId: available.id,
-  });
-
-  return NextResponse.json({
-    order: {
-      id: order.id,
-      productId: order.product_id,
-      amountUsdc: fromMicroUsdc(order.amount_micro),
-      amountMicro: order.amount_micro,
-      status: order.status,
-      merchantAddress: MERCHANT_ADDRESS,
-      usdcAddress: USDC_ADDRESS,
-    },
-  });
 }
 
 export async function GET(request: NextRequest) {
@@ -57,23 +36,9 @@ export async function GET(request: NextRequest) {
   if (!orderId) {
     return NextResponse.json({ error: "Missing order id" }, { status: 400 });
   }
-
   const order = getOrder(orderId);
   if (!order) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
-
-  const voucher = getVoucherByOrder(orderId);
-  return NextResponse.json({
-    order: {
-      id: order.id,
-      productId: order.product_id,
-      amountUsdc: fromMicroUsdc(order.amount_micro),
-      status: order.status,
-      txHash: order.tx_hash,
-      voucherCode: voucher?.code ?? null,
-      merchantAddress: MERCHANT_ADDRESS,
-      usdcAddress: USDC_ADDRESS,
-    },
-  });
+  return NextResponse.json({ order: toPublicOrder(order) });
 }

@@ -1,6 +1,9 @@
 import Database from "better-sqlite3";
-import path from "path";
+import { createHash } from "crypto";
 import fs from "fs";
+import path from "path";
+import { CATALOG } from "./catalog";
+import { toMicroUsdc } from "./config";
 
 const dataDir = path.join(process.cwd(), "data");
 if (!fs.existsSync(dataDir)) {
@@ -8,20 +11,97 @@ if (!fs.existsSync(dataDir)) {
 }
 
 const dbPath = path.join(dataDir, "vouchers.db");
+const SCHEMA_VERSION = "2";
 
 const globalForDb = globalThis as typeof globalThis & {
   __voucherDb?: Database.Database;
 };
 
+export type Product = {
+  id: number;
+  slug: string;
+  brand: string;
+  name: string;
+  description: string;
+  category: string;
+  usd_value: number;
+  price_micro: number;
+  theme: string;
+  active: number;
+  created_at: string;
+};
+
+export type Order = {
+  id: string;
+  product_id: number;
+  quantity: number;
+  buyer_address: string | null;
+  amount_micro: number;
+  tx_hash: string | null;
+  status: "pending" | "paid" | "expired";
+  created_at: string;
+  paid_at: string | null;
+};
+
+export type VoucherStatus = "available" | "reserved" | "sold" | "used" | "expired";
+
+export type Voucher = {
+  id: number;
+  product_id: number;
+  code: string;
+  status: VoucherStatus;
+  order_id: string | null;
+  sold_at: string | null;
+  used_at: string | null;
+  created_at: string;
+};
+
+export type VoucherRow = Voucher & {
+  product_name: string;
+  brand: string;
+  usd_value: number;
+  tx_hash: string | null;
+  order_status: string | null;
+};
+
+function voucherCode(seed: string): string {
+  const hex = createHash("sha256").update(seed).digest("hex").slice(0, 16).toUpperCase();
+  return `${hex.slice(0, 4)}-${hex.slice(4, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}`;
+}
+
 function createDb() {
   const database = new Database(dbPath);
   database.pragma("journal_mode = WAL");
   database.exec(`
+    CREATE TABLE IF NOT EXISTS meta (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+  `);
+
+  const version = database
+    .prepare("SELECT value FROM meta WHERE key = 'schema'")
+    .get() as { value: string } | undefined;
+
+  if (version?.value !== SCHEMA_VERSION) {
+    database.exec(`
+      DROP TABLE IF EXISTS vouchers;
+      DROP TABLE IF EXISTS orders;
+      DROP TABLE IF EXISTS products;
+    `);
+  }
+
+  database.exec(`
     CREATE TABLE IF NOT EXISTS products (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      slug TEXT NOT NULL UNIQUE,
+      brand TEXT NOT NULL,
       name TEXT NOT NULL,
       description TEXT NOT NULL,
+      category TEXT NOT NULL,
+      usd_value INTEGER NOT NULL,
       price_micro INTEGER NOT NULL,
+      theme TEXT NOT NULL,
       active INTEGER NOT NULL DEFAULT 1,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -29,11 +109,11 @@ function createDb() {
     CREATE TABLE IF NOT EXISTS orders (
       id TEXT PRIMARY KEY,
       product_id INTEGER NOT NULL,
+      quantity INTEGER NOT NULL DEFAULT 1,
       buyer_address TEXT,
       amount_micro INTEGER NOT NULL,
-      tx_hash TEXT,
+      tx_hash TEXT UNIQUE,
       status TEXT NOT NULL DEFAULT 'pending',
-      voucher_id INTEGER,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       paid_at TEXT,
       FOREIGN KEY (product_id) REFERENCES products(id)
@@ -53,43 +133,62 @@ function createDb() {
     );
   `);
 
+  database
+    .prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('schema', ?)")
+    .run(SCHEMA_VERSION);
+
   const productCount = database
     .prepare("SELECT COUNT(*) as count FROM products")
     .get() as { count: number };
 
   if (productCount.count === 0) {
-    database
-      .prepare(
-        `INSERT INTO products (name, description, price_micro) VALUES (?, ?, ?)`
-      )
-      .run(
-        "Premium Gift Voucher",
-        "Redeem for $10 off your next purchase at partner stores.",
-        1_000_000
-      );
-    database
-      .prepare(
-        `INSERT INTO products (name, description, price_micro) VALUES (?, ?, ?)`
-      )
-      .run(
-        "Deluxe Gift Voucher",
-        "Redeem for $25 off your next purchase at partner stores.",
-        2_500_000
-      );
-
-    const seedCodes = [
-      { productId: 1, codes: ["GIFT-10-ALPHA", "GIFT-10-BRAVO", "GIFT-10-CHARLIE"] },
-      { productId: 2, codes: ["GIFT-25-DELTA", "GIFT-25-ECHO", "GIFT-25-FOXTROT"] },
-    ];
-
-    const insertVoucher = database.prepare(
-      `INSERT INTO vouchers (product_id, code) VALUES (?, ?)`
+    const insertProduct = database.prepare(
+      `INSERT INTO products (slug, brand, name, description, category, usd_value, price_micro, theme)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     );
-    for (const group of seedCodes) {
-      for (const code of group.codes) {
-        insertVoucher.run(group.productId, code);
+    const insertVoucher = database.prepare(
+      `INSERT INTO vouchers (product_id, code, status, used_at) VALUES (?, ?, ?, ?)`
+    );
+
+    const seed = database.transaction(() => {
+      for (const item of CATALOG) {
+        const result = insertProduct.run(
+          item.slug,
+          item.brand,
+          item.name,
+          item.description,
+          item.category,
+          item.usdValue,
+          Number(toMicroUsdc(item.usdValue)),
+          item.theme
+        );
+        const productId = Number(result.lastInsertRowid);
+        for (let i = 0; i < 8; i += 1) {
+          insertVoucher.run(
+            productId,
+            voucherCode(`${item.slug}:${i}`),
+            "available",
+            null
+          );
+        }
       }
-    }
+
+      const amazon = database
+        .prepare("SELECT id FROM products WHERE slug = 'amazon'")
+        .get() as { id: number };
+      const netflix = database
+        .prepare("SELECT id FROM products WHERE slug = 'netflix'")
+        .get() as { id: number };
+
+      insertVoucher.run(
+        amazon.id,
+        voucherCode("amazon:used"),
+        "used",
+        new Date().toISOString()
+      );
+      insertVoucher.run(netflix.id, voucherCode("netflix:expired"), "expired", null);
+    });
+    seed();
   }
 
   return database;
@@ -101,42 +200,14 @@ if (process.env.NODE_ENV !== "production") {
   globalForDb.__voucherDb = db;
 }
 
-export type Product = {
-  id: number;
-  name: string;
-  description: string;
-  price_micro: number;
-  active: number;
-  created_at: string;
-};
-
-export type Order = {
-  id: string;
-  product_id: number;
-  buyer_address: string | null;
-  amount_micro: number;
-  tx_hash: string | null;
-  status: "pending" | "paid" | "expired";
-  voucher_id: number | null;
-  created_at: string;
-  paid_at: string | null;
-};
-
-export type Voucher = {
-  id: number;
-  product_id: number;
-  code: string;
-  status: "available" | "reserved" | "sold" | "used";
-  order_id: string | null;
-  sold_at: string | null;
-  used_at: string | null;
-  created_at: string;
-};
-
 export function listProducts(): Product[] {
   return db
-    .prepare("SELECT * FROM products WHERE active = 1 ORDER BY price_micro ASC")
+    .prepare("SELECT * FROM products WHERE active = 1 ORDER BY id ASC")
     .all() as Product[];
+}
+
+export function listAllProducts(): Product[] {
+  return db.prepare("SELECT * FROM products ORDER BY id ASC").all() as Product[];
 }
 
 export function getProduct(id: number): Product | undefined {
@@ -145,28 +216,66 @@ export function getProduct(id: number): Product | undefined {
     | undefined;
 }
 
+export function getProductBySlug(slug: string): Product | undefined {
+  return db.prepare("SELECT * FROM products WHERE slug = ?").get(slug) as
+    | Product
+    | undefined;
+}
+
+export function countAvailable(productId: number): number {
+  const row = db
+    .prepare(
+      `SELECT COUNT(*) as count FROM vouchers WHERE product_id = ? AND status = 'available'`
+    )
+    .get(productId) as { count: number };
+  return row.count;
+}
+
 export function createOrder(input: {
   id: string;
   productId: number;
+  quantity: number;
   buyerAddress?: string;
-  amountMicro: number;
-  voucherId: number;
 }): Order {
-  const tx = db.transaction(() => {
+  const product = getProduct(input.productId);
+  if (!product) {
+    throw new Error("Product not found");
+  }
+  const quantity = Math.floor(input.quantity);
+  if (!Number.isFinite(quantity) || quantity < 1) {
+    throw new Error("Quantity must be at least 1");
+  }
+
+  const run = db.transaction(() => {
+    const available = db
+      .prepare(
+        `SELECT id FROM vouchers WHERE product_id = ? AND status = 'available' ORDER BY id ASC LIMIT ?`
+      )
+      .all(input.productId, quantity) as { id: number }[];
+    if (available.length < quantity) {
+      throw new Error("Not enough vouchers in stock");
+    }
     db.prepare(
-      `INSERT INTO orders (id, product_id, buyer_address, amount_micro, voucher_id) VALUES (?, ?, ?, ?, ?)`
+      `INSERT INTO orders (id, product_id, quantity, buyer_address, amount_micro)
+       VALUES (?, ?, ?, ?, ?)`
     ).run(
       input.id,
       input.productId,
+      quantity,
       input.buyerAddress ?? null,
-      input.amountMicro,
-      input.voucherId
+      product.price_micro * quantity
     );
-    db.prepare(
+    const reserve = db.prepare(
       `UPDATE vouchers SET order_id = ?, status = 'reserved' WHERE id = ? AND status = 'available'`
-    ).run(input.id, input.voucherId);
+    );
+    for (const row of available) {
+      const result = reserve.run(input.id, row.id);
+      if (result.changes !== 1) {
+        throw new Error("Could not reserve voucher");
+      }
+    }
   });
-  tx();
+  run();
   return getOrder(input.id)!;
 }
 
@@ -176,37 +285,60 @@ export function getOrder(id: string): Order | undefined {
     | undefined;
 }
 
+export function findPendingOrderByTxHash(txHash: string): Order | undefined {
+  return db
+    .prepare("SELECT * FROM orders WHERE tx_hash = ?")
+    .get(txHash) as Order | undefined;
+}
+
+export function findOldestPendingForAmount(amountMicro: number): Order | undefined {
+  return db
+    .prepare(
+      `SELECT * FROM orders
+       WHERE status = 'pending' AND amount_micro = ? AND tx_hash IS NULL
+       ORDER BY created_at ASC LIMIT 1`
+    )
+    .get(amountMicro) as Order | undefined;
+}
+
 export function setOrderTxHash(id: string, txHash: string) {
-  db.prepare("UPDATE orders SET tx_hash = ? WHERE id = ?").run(txHash, id);
+  db.prepare("UPDATE orders SET tx_hash = ? WHERE id = ? AND tx_hash IS NULL").run(
+    txHash,
+    id
+  );
 }
 
 export function fulfillOrder(orderId: string) {
   const now = new Date().toISOString();
-  const order = getOrder(orderId);
-  if (!order?.voucher_id) return;
   const tx = db.transaction(() => {
+    db.prepare(`UPDATE orders SET status = 'paid', paid_at = ? WHERE id = ?`).run(
+      now,
+      orderId
+    );
     db.prepare(
-      `UPDATE orders SET status = 'paid', paid_at = ? WHERE id = ?`
+      `UPDATE vouchers SET status = 'sold', sold_at = ? WHERE order_id = ? AND status = 'reserved'`
     ).run(now, orderId);
-    db.prepare(
-      `UPDATE vouchers SET status = 'sold', sold_at = ? WHERE id = ?`
-    ).run(now, order.voucher_id);
   });
   tx();
 }
 
-export function claimAvailableVoucher(productId: number): Voucher | undefined {
+export function getVouchersByOrder(orderId: string): Voucher[] {
   return db
-    .prepare(
-      `SELECT * FROM vouchers WHERE product_id = ? AND status = 'available' ORDER BY id ASC LIMIT 1`
-    )
-    .get(productId) as Voucher | undefined;
+    .prepare("SELECT * FROM vouchers WHERE order_id = ? ORDER BY id ASC")
+    .all(orderId) as Voucher[];
 }
 
-export function getVoucherByOrder(orderId: string): Voucher | undefined {
+export function getVoucherById(id: number): VoucherRow | undefined {
   return db
-    .prepare("SELECT * FROM vouchers WHERE order_id = ?")
-    .get(orderId) as Voucher | undefined;
+    .prepare(
+      `SELECT v.*, p.name as product_name, p.brand, p.usd_value,
+              o.tx_hash, o.status as order_status
+       FROM vouchers v
+       JOIN products p ON p.id = v.product_id
+       LEFT JOIN orders o ON o.id = v.order_id
+       WHERE v.id = ?`
+    )
+    .get(id) as VoucherRow | undefined;
 }
 
 export function getVoucherByCode(code: string): Voucher | undefined {
@@ -227,30 +359,93 @@ export function addVouchers(productId: number, codes: string[]) {
   tx(codes.filter((c) => c.trim().length > 0));
 }
 
-export function listVouchers() {
+export function listVouchers(filter?: { status?: string; query?: string }): VoucherRow[] {
+  const clauses: string[] = [];
+  const params: string[] = [];
+  if (filter?.status && filter.status !== "all") {
+    clauses.push("v.status = ?");
+    params.push(filter.status);
+  }
+  if (filter?.query) {
+    clauses.push(
+      "(v.code LIKE ? OR p.name LIKE ? OR p.brand LIKE ? OR IFNULL(v.order_id, '') LIKE ?)"
+    );
+    const like = `%${filter.query}%`;
+    params.push(like, like, like, like);
+  }
+  const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
   return db
     .prepare(
-      `SELECT v.*, p.name as product_name FROM vouchers v
+      `SELECT v.*, p.name as product_name, p.brand, p.usd_value,
+              o.tx_hash, o.status as order_status
+       FROM vouchers v
        JOIN products p ON p.id = v.product_id
+       LEFT JOIN orders o ON o.id = v.order_id
+       ${where}
        ORDER BY v.id DESC`
     )
-    .all();
+    .all(...params) as VoucherRow[];
 }
 
-export function listAllProducts(): Product[] {
+export function voucherStats() {
+  const row = db
+    .prepare(
+      `SELECT
+         COUNT(*) as total,
+         SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available,
+         SUM(CASE WHEN status = 'used' THEN 1 ELSE 0 END) as used,
+         SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) as expired
+       FROM vouchers`
+    )
+    .get() as {
+    total: number;
+    available: number;
+    used: number;
+    expired: number;
+  };
+  return {
+    total: row.total ?? 0,
+    available: row.available ?? 0,
+    used: row.used ?? 0,
+    expired: row.expired ?? 0,
+  };
+}
+
+export function listRecentActivity(limit = 8): VoucherRow[] {
   return db
-    .prepare("SELECT * FROM products ORDER BY id ASC")
-    .all() as Product[];
+    .prepare(
+      `SELECT v.*, p.name as product_name, p.brand, p.usd_value,
+              o.tx_hash, o.status as order_status
+       FROM vouchers v
+       JOIN products p ON p.id = v.product_id
+       LEFT JOIN orders o ON o.id = v.order_id
+       WHERE v.status IN ('sold', 'used', 'reserved')
+       ORDER BY COALESCE(v.used_at, v.sold_at, v.created_at) DESC
+       LIMIT ?`
+    )
+    .all(limit) as VoucherRow[];
 }
 
-export function redeemVoucher(code: string): { ok: true } | { ok: false; error: string } {
+export function isTxHashUsed(txHash: string): boolean {
+  const row = db
+    .prepare("SELECT id FROM orders WHERE tx_hash = ?")
+    .get(txHash) as { id: string } | undefined;
+  return Boolean(row);
+}
+
+export function redeemVoucher(
+  code: string
+): { ok: true } | { ok: false; error: string } {
   const voucher = getVoucherByCode(code);
   if (!voucher) return { ok: false, error: "Voucher not found" };
-  if (voucher.status === "available") {
+  if (voucher.status === "available" || voucher.status === "reserved") {
     return { ok: false, error: "Voucher has not been purchased yet" };
   }
   if (voucher.status === "used") {
     return { ok: false, error: "Voucher already redeemed" };
+  }
+  if (voucher.status === "expired") {
+    return { ok: false, error: "Voucher has expired" };
   }
   db.prepare(
     `UPDATE vouchers SET status = 'used', used_at = datetime('now') WHERE id = ?`

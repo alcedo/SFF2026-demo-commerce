@@ -1,48 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ADMIN_PASSWORD } from "@/lib/config";
+import { isRequestAdmin } from "@/lib/admin-auth";
 import {
   addVouchers,
   listAllProducts,
   listVouchers,
-  redeemVoucher,
 } from "@/lib/db";
-import { fromMicroUsdc } from "@/lib/config";
-
-function isAuthorized(request: NextRequest) {
-  const auth = request.headers.get("x-admin-password");
-  return auth === ADMIN_PASSWORD;
-}
+import { toPublicProduct } from "@/lib/order-view";
 
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isRequestAdmin(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  const products = listAllProducts().map((p) => ({
-    id: p.id,
-    name: p.name,
-    priceUsdc: fromMicroUsdc(p.price_micro),
-  }));
-
-  const vouchers = listVouchers();
-
-  return NextResponse.json({ products, vouchers });
+  const status = request.nextUrl.searchParams.get("status") ?? "all";
+  const query = request.nextUrl.searchParams.get("q") ?? "";
+  return NextResponse.json({
+    products: listAllProducts().map(toPublicProduct),
+    vouchers: listVouchers({ status, query }),
+  });
 }
 
 export async function POST(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isRequestAdmin(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  const body = await request.json();
+  const body = (await request.json()) as Record<string, unknown>;
   const productId = Number(body.productId);
   const codes = (body.codes as string[] | string) ?? [];
-
   const codeList = Array.isArray(codes)
     ? codes
     : String(codes)
         .split(/[\n,]/)
-        .map((c) => c.trim())
+        .map((item) => item.trim())
         .filter(Boolean);
 
   if (!productId || codeList.length === 0) {
@@ -56,8 +44,7 @@ export async function POST(request: NextRequest) {
     addVouchers(productId, codeList);
     return NextResponse.json({ added: codeList.length });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to add vouchers";
+    const message = error instanceof Error ? error.message : "Failed to add vouchers";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

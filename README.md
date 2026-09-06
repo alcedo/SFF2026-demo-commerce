@@ -1,5 +1,5 @@
 # ai-general-workspace
 
-## VoucherVault
+## VoucherShop
 
-Sepolia stablecoin e-commerce shop for digital vouchers. See [voucher-shop/README.md](voucher-shop/README.md).
+Digital gift cards paid in USDC on Sepolia. See [voucher-shop/README.md](voucher-shop/README.md).

@@ -36,7 +36,7 @@ const erc20Abi = parseAbi([
 async function main() {
   const productRes = await fetch(`${APP_URL}/api/products`);
   const { products } = await productRes.json();
-  const product = products[0];
+  const product = products.find((item) => item.slug === "amazon") ?? products[0];
   if (!product) throw new Error("No products available");
 
   const orderRes = await fetch(`${APP_URL}/api/orders`, {
@@ -44,6 +44,7 @@ async function main() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       productId: product.id,
+      quantity: 1,
       buyerAddress: account.address,
     }),
   });
@@ -83,12 +84,15 @@ async function main() {
   if (!verifyRes.ok) throw new Error(verifyData.error ?? "Verify failed");
 
   console.log("Purchase successful!");
-  console.log("Voucher code:", verifyData.order.voucherCode);
+  const codes = verifyData.order.voucherCodes ?? [];
+  console.log("Voucher codes:", codes.join(", "));
+  const voucherCode = codes[0];
+  if (!voucherCode) throw new Error("No voucher code returned");
 
   const redeemRes = await fetch(`${APP_URL}/api/vouchers/redeem`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ code: verifyData.order.voucherCode }),
+    body: JSON.stringify({ code: voucherCode }),
   });
   const redeemData = await redeemRes.json();
   if (!redeemRes.ok) throw new Error(redeemData.error ?? "Redeem failed");

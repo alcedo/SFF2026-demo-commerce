@@ -1,21 +1,8 @@
-# VoucherVault
+# VoucherShop
 
-Digital voucher e-commerce store that accepts USDC stablecoin payments on Ethereum Sepolia testnet.
+Buy digital gift cards with USDC on Ethereum Sepolia.
 
-## Features
-
-- Browse and purchase digital gift vouchers
-- Pay with USDC via connected wallet on Sepolia
-- On-chain payment verification before voucher delivery
-- Copy voucher code after successful purchase
-- Admin panel to add voucher codes and view inventory
-- Redeem page marks vouchers as used in SQLite
-
-## Stack
-
-- Next.js (App Router)
-- SQLite via better-sqlite3
-- wagmi + viem for wallet and payment verification
+The storefront matches the VoucherShop screens: catalog, quantity checkout, send-to-address payment, voucher reveal, and an admin inventory panel.
 
 ## Setup
 
@@ -23,42 +10,37 @@ Digital voucher e-commerce store that accepts USDC stablecoin payments on Ethere
 cd voucher-shop
 npm install
 npm run setup:env
-```
-
-This copies committed test wallets from `config/test-wallets.env` into `.env.local`. See [`config/TEST_WALLETS.md`](config/TEST_WALLETS.md) for addresses and funding steps.
-
-To generate fresh wallets instead:
-
-```bash
-node scripts/generate-wallets.mjs
-```
-
-Edit `config/test-wallets.env` with the output if you rotate keys.
-
-## Run
-
-```bash
 npm run dev
 ```
 
 Open http://localhost:3000
 
-- **Shop**: browse vouchers
-- **Checkout**: connect wallet, reserve voucher, pay USDC
-- **Admin**: password from `ADMIN_PASSWORD` (default `admin123`)
-- **Redeem**: mark a purchased voucher as used
+Default admin login is `admin` / `admin123`.
 
-## E2E test
+## Payment
 
-With the dev server running:
+Checkout shows the merchant address. Send the exact USDC amount on Sepolia. The app polls for a matching transfer, then reveals the codes.
+
+`DEMO_AUTO_PAY` defaults on. After about 8 seconds the order fulfills so you can walk the UI without a wallet. Set `DEMO_AUTO_PAY=0` to require a real transfer.
+
+On-chain checks still run through `src/lib/payment.ts` and `POST /api/orders/[id]/verify`.
+
+## Routes
+
+- `/` home
+- `/vouchers` catalog
+- `/vouchers/[slug]` product and quantity
+- `/checkout/[orderId]` send USDC
+- `/processing/[orderId]` confirmation steps
+- `/success/[orderId]` payment receipt
+- `/order/[id]` voucher codes
+- `/how-it-works` redeem help
+- `/admin/login` admin sign-in
+
+## E2E
+
+With the app running against an Anvil Sepolia fork:
 
 ```bash
-node scripts/e2e-purchase.mjs
+npm run test:e2e
 ```
-
-## Payment flow
-
-1. User reserves a voucher (order created, voucher held)
-2. User sends USDC to merchant address via wallet
-3. Backend verifies the on-chain transfer
-4. Voucher code is revealed on the order page

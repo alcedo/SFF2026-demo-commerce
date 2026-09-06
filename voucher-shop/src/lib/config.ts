@@ -1,6 +1,7 @@
 import { sepolia } from "viem/chains";
 
 export const CHAIN = sepolia;
+export const NETWORK_NAME = "Sepolia";
 
 export const USDC_ADDRESS =
   "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238" as const;
@@ -8,6 +9,7 @@ export const USDC_ADDRESS =
 export const MERCHANT_ADDRESS = (process.env.MERCHANT_ADDRESS ??
   "0x0000000000000000000000000000000000000000") as `0x${string}`;
 
+export const ADMIN_USERNAME = process.env.ADMIN_USERNAME ?? "admin";
 export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "admin123";
 
 export const RPC_URL =
@@ -15,10 +17,39 @@ export const RPC_URL =
 
 export const USDC_DECIMALS = 6;
 
+export const DEMO_AUTO_PAY = process.env.DEMO_AUTO_PAY !== "0";
+export const DEMO_AUTO_PAY_MS = Number(process.env.DEMO_AUTO_PAY_MS ?? "8000");
+
+export const ADMIN_COOKIE = "vs_admin";
+
 export function toMicroUsdc(amount: number): bigint {
   return BigInt(Math.round(amount * 10 ** USDC_DECIMALS));
 }
 
 export function fromMicroUsdc(micro: number | bigint): number {
   return Number(micro) / 10 ** USDC_DECIMALS;
+}
+
+export function formatUsdc(micro: number | bigint): string {
+  return fromMicroUsdc(micro).toFixed(2);
+}
+
+export function formatUsd(value: number): string {
+  return `$${value} USD`;
+}
+
+export function truncateHex(value: string, head = 6, tail = 4): string {
+  if (value.length <= head + tail + 1) return value;
+  return `${value.slice(0, head)}...${value.slice(-tail)}`;
+}
+
+export function formatDateTime(iso: string): string {
+  const value = iso.includes("T") ? iso : `${iso.replace(" ", "T")}Z`;
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(value));
 }

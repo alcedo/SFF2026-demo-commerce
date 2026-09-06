@@ -1,0 +1,5 @@
+ts	phase	decision	why	evidence	result
+2026-09-06T02:10:50Z	frame	Match VoucherShop screenshots on sff2026-commerce, keep Sepolia USDC verify	User stepped away; done means every mockup screen plus qty-3 purchase video	origin/sff2026-commerce bc4ffe6, screenshots in assets	open
+2026-09-06T02:10:50Z	frame	Skip full architect arena	Screenshots already lock the UX; existing products/orders/vouchers lifecycle is the domain	poteto-mode laziness-protocol + figure-it-out skip for concrete shape	architect skipped
+2026-09-06T02:10:50Z	how	Keep on-chain verify, replace wallet-connect with send-to-address and auto-detect	Mockups show copy-address checkout and quantity; current app is VoucherVault wallet connect	voucher-shop/src/app/checkout/[productId]/page.tsx	open
+2026-09-06T02:21:19Z	domain	Schema v2: brand catalog, quantity orders, many vouchers per order, demo auto-detect	Screenshots need qty 3 and send-to-address; existing single voucher_id could not represent that	voucher-shop/src/lib/db.ts voucher-shop/src/lib/catalog.ts	build green
