@@ -3,6 +3,8 @@ import { expireOrder, getOrder } from "@/lib/db";
 import { toPublicOrder } from "@/lib/order-view";
 import { detectAndFulfill } from "@/lib/payment";
 
+export const maxDuration = 15;
+
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }

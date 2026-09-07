@@ -447,6 +447,10 @@ export async function createOrder(input: {
 }
 
 export function orderCreatedMs(order: Order): number {
+  const claims = parseOrderToken(order.id);
+  if (claims && Number.isFinite(claims.createdAtMs) && claims.createdAtMs > 0) {
+    return claims.createdAtMs;
+  }
   const raw = order.created_at.includes("T")
     ? order.created_at
     : `${order.created_at.replace(" ", "T")}Z`;
@@ -461,6 +465,60 @@ export function isInvoiceAged(order: Order, now = Date.now()): boolean {
 export async function listPendingOrders(): Promise<Order[]> {
   if (usingNeon()) return neonShop.neonListPendingOrders();
   return loadState().orders.filter((order) => order.status === "pending");
+}
+
+export async function applyVerifiedPayment(
+  orderId: string,
+  txHash: string
+): Promise<boolean> {
+  if (usingNeon()) return neonShop.neonApplyVerifiedPayment(orderId, txHash);
+  let claimed = false;
+  mutate((state) => {
+    if (
+      state.orders.some(
+        (item) =>
+          item.tx_hash?.toLowerCase() === txHash.toLowerCase() &&
+          item.id !== orderId
+      )
+    ) {
+      return;
+    }
+    const order = state.orders.find((item) => item.id === orderId);
+    if (!order) return;
+    if (order.status === "paid") {
+      claimed = (order.tx_hash ?? "").toLowerCase() === txHash.toLowerCase();
+      return;
+    }
+    if (order.status !== "pending" && order.status !== "expired") return;
+    const now = new Date().toISOString();
+    order.tx_hash = txHash;
+    order.status = "paid";
+    order.paid_at = now;
+    claimed = true;
+    let attached = 0;
+    for (const voucher of state.vouchers) {
+      if (voucher.order_id !== orderId) continue;
+      if (voucher.status === "reserved") {
+        voucher.status = "sold";
+        voucher.sold_at = now;
+      }
+      if (voucher.status === "sold") attached += 1;
+    }
+    for (const voucher of state.vouchers) {
+      if (attached >= order.quantity) break;
+      if (
+        voucher.product_id === order.product_id &&
+        voucher.status === "available" &&
+        voucher.order_id == null
+      ) {
+        voucher.status = "sold";
+        voucher.order_id = orderId;
+        voucher.sold_at = now;
+        attached += 1;
+      }
+    }
+  });
+  return claimed;
 }
 
 export async function expireOrder(orderId: string): Promise<boolean> {
@@ -478,6 +536,17 @@ export async function expireOrder(orderId: string): Promise<boolean> {
       }
     }
   });
+  return expired;
+}
+
+export async function expireAgedInvoices(now = Date.now()): Promise<number> {
+  const agedIds = (await listPendingOrders())
+    .filter((order) => isInvoiceAged(order, now))
+    .map((order) => order.id);
+  let expired = 0;
+  for (const id of agedIds) {
+    if (await expireOrder(id)) expired += 1;
+  }
   return expired;
 }
 

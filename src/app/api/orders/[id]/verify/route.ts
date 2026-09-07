@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fulfillOrder, getOrder, setOrderTxHash } from "@/lib/db";
+import { applyVerifiedPayment, getOrder } from "@/lib/db";
 import { orderDepositAddress } from "@/lib/order-deposit";
 import { toPublicOrder } from "@/lib/order-view";
 import { verifyUsdcPayment } from "@/lib/payment";
+
+export const maxDuration = 15;
 
 export async function POST(
   request: NextRequest,
@@ -21,10 +23,6 @@ export async function POST(
     return NextResponse.json({ order: await toPublicOrder(order) });
   }
 
-  if (order.status === "expired") {
-    return NextResponse.json({ error: "Invoice expired" }, { status: 410 });
-  }
-
   if (!txHash) {
     return NextResponse.json({ error: "Missing txHash" }, { status: 400 });
   }
@@ -40,9 +38,8 @@ export async function POST(
     return NextResponse.json({ error: verification.error }, { status: 400 });
   }
 
-  if (!(await setOrderTxHash(id, txHash))) {
+  if (!(await applyVerifiedPayment(id, txHash))) {
     return NextResponse.json({ error: "Transaction already used" }, { status: 409 });
   }
-  await fulfillOrder(id);
   return NextResponse.json({ order: await toPublicOrder((await getOrder(id))!) });
 }
