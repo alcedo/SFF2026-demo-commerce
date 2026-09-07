@@ -26,7 +26,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ order: await toPublicOrder(order) });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not create order";
-    const status = message.includes("stock") ? 409 : 400;
+    const status = message.includes("stock")
+      ? 409
+      : message.includes("MERCHANT_PRIVATE_KEY")
+        ? 503
+        : 400;
     return NextResponse.json({ error: message }, { status });
   }
 }
@@ -40,5 +44,11 @@ export async function GET(request: NextRequest) {
   if (!order) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
-  return NextResponse.json({ order: await toPublicOrder(order) });
+  try {
+    return NextResponse.json({ order: await toPublicOrder(order) });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Could not load order";
+    const status = message.includes("MERCHANT_PRIVATE_KEY") ? 503 : 400;
+    return NextResponse.json({ error: message }, { status });
+  }
 }

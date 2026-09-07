@@ -19,4 +19,4 @@ ts	phase	decision	why	evidence	result
 2026-09-07T12:52:14Z	vercel	Production is main 6e2cff4; GET /api/health/db is 404; Neon shop code is not on that deploy	https://sff-2026-demo-commerce.vercel.app/api/health/db	blocked-code
 2026-09-07T12:52:30Z	vercel	User connected Neon to the new project; trigger Preview of cursor/neon-postgres-5893 to test store=neon	PR 11 vs production main	open
 2026-09-07T12:53:52Z	verify	Preview dpl_3FXwQV87g22Wb6yEbhKJy5eC44tA GET /api/health/db ok store neon products 9 vouchers 110	host ep-holy-firefly-aux38ocy-pooler.c-10.us-east-1.aws.neon.tech using DATABASE_URL; runtime log 200	VERIFIED neon-preview
-2026-09-07T12:56:40Z	vercel	Later MCP fetches of the same Preview hit SSO 302; Playwright share URL landed on Vercel login	Health JSON + runtime logs are the proof. Checkout UI not re-driven on Preview.	partial
+2026-09-07T13:02:00Z	bug	Preview POST /api/orders 400 MERCHANT_PRIVATE_KEY must be a 32-byte hex key	New Vercel project has Neon, not the HD seed; createOrder wrote then toPublicOrder threw	health merchantKeySource demo fallback; fail before reserve	open

@@ -43,7 +43,9 @@ function demoTxHash(orderId) {
 function deriveDeposit(index) {
   const hex = MERCHANT_KEY.startsWith("0x") ? MERCHANT_KEY.slice(2) : MERCHANT_KEY;
   if (!/^[0-9a-fA-F]{64}$/.test(hex)) {
-    throw new Error("MERCHANT_PRIVATE_KEY must be a 32-byte hex key");
+    throw new Error(
+      "Set MERCHANT_PRIVATE_KEY in this environment (64 hex chars, optional 0x, no quotes)"
+    );
   }
   const child = HDKey.fromMasterSeed(Buffer.from(hex, "hex")).derive(
     `${HD_DEPOSIT_PATH}/${index}`

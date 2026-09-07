@@ -5,6 +5,8 @@ import { DEMO_AUTO_PAY, DEMO_AUTO_PAY_MS, ORDER_TTL_MS, fromMicroUsdc, toMicroUs
 import {
   allocateHdIndex,
   heldDerivationIndices,
+  MERCHANT_KEY_ERROR,
+  merchantPrivateKeyConfigured,
 } from "./order-deposit";
 import { resolveDatabaseUrl } from "./neon";
 import {
@@ -344,6 +346,9 @@ export async function createOrder(input: {
   const quantity = Math.floor(input.quantity);
   if (!Number.isFinite(quantity) || quantity < 1) {
     throw new Error("Quantity must be at least 1");
+  }
+  if (!merchantPrivateKeyConfigured()) {
+    throw new Error(MERCHANT_KEY_ERROR);
   }
 
   const createdAtMs = Date.now();

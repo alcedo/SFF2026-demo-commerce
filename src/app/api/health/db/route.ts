@@ -5,6 +5,10 @@ import {
   hostFromDatabaseUrl,
   resolveDatabaseUrl,
 } from "@/lib/neon";
+import {
+  merchantPrivateKeyConfigured,
+  merchantPrivateKeySource,
+} from "@/lib/order-deposit";
 import { ensureNeonShop } from "@/lib/shop-neon";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +24,8 @@ export async function GET() {
         store: "json",
         error: "No Neon connection string in the environment",
         present,
+        merchantKey: merchantPrivateKeyConfigured(),
+        merchantKeySource: merchantPrivateKeySource(),
       },
       { status: 503, headers: { "Cache-Control": "no-store" } }
     );
@@ -59,6 +65,8 @@ export async function GET() {
         products: row?.products,
         vouchers: row?.vouchers,
         present,
+        merchantKey: merchantPrivateKeyConfigured(),
+        merchantKeySource: merchantPrivateKeySource(),
       },
       { headers: { "Cache-Control": "no-store" } }
     );
@@ -71,6 +79,8 @@ export async function GET() {
         host: hostFromDatabaseUrl(found.url),
         error: error instanceof Error ? error.message : "Neon query failed",
         present,
+        merchantKey: merchantPrivateKeyConfigured(),
+        merchantKeySource: merchantPrivateKeySource(),
       },
       { status: 500, headers: { "Cache-Control": "no-store" } }
     );

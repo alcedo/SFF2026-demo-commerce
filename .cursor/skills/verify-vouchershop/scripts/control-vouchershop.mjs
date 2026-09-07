@@ -221,6 +221,7 @@ function writeDemoEnv(appDir, url) {
     "ORDER_SECRET=vouchershop-demo",
     `APP_URL=${url}`,
     "MERCHANT_ADDRESS=0x006450335E618A9Fae2ad89542af411C8668d87D",
+    "MERCHANT_PRIVATE_KEY=0x55d0c426bccaff91404aaaa8e901b0c94d47c0e1c98703400d6761cffee0cf06",
     "SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com",
     "NEXT_PUBLIC_SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com",
     "DATABASE_URL=",
