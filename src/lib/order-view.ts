@@ -35,7 +35,7 @@ export type PublicOrder = {
   voucherCodes: string[];
 };
 
-export function toPublicProduct(product: Product): PublicProduct {
+export async function toPublicProduct(product: Product): Promise<PublicProduct> {
   const catalog = catalogBySlug(product.slug);
   return {
     id: product.id,
@@ -47,7 +47,7 @@ export function toPublicProduct(product: Product): PublicProduct {
     usdValue: fromMicroUsdc(product.price_micro),
     priceUsdc: fromMicroUsdc(product.price_micro),
     theme: product.theme,
-    available: countAvailable(product.id),
+    available: await countAvailable(product.id),
     redeemUrl: catalog?.redeemUrl ?? "https://example.com/redeem",
     redeemSteps: catalog?.redeemSteps ?? [
       "Open the brand website",
@@ -58,8 +58,8 @@ export function toPublicProduct(product: Product): PublicProduct {
   };
 }
 
-export function toPublicOrder(order: Order): PublicOrder {
-  const product = getProduct(order.product_id);
+export async function toPublicOrder(order: Order): Promise<PublicOrder> {
+  const product = await getProduct(order.product_id);
   if (!product) {
     throw new Error("Order product missing");
   }
@@ -76,10 +76,10 @@ export function toPublicOrder(order: Order): PublicOrder {
     txHash: order.tx_hash,
     createdAt: order.created_at,
     paidAt: order.paid_at,
-    product: toPublicProduct(product),
+    product: await toPublicProduct(product),
     voucherCodes:
       order.status === "paid"
-        ? getVouchersByOrder(order.id).map((voucher) => voucher.code)
+        ? (await getVouchersByOrder(order.id)).map((voucher) => voucher.code)
         : [],
   };
 }

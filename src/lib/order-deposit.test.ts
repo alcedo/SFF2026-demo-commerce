@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { afterEach, beforeEach, describe, it } from "node:test";
 import {
   allocateHdIndex,
   heldDerivationIndices,
+  MERCHANT_KEY_ERROR,
+  merchantPrivateKeyConfigured,
+  merchantPrivateKeyHex,
+  merchantPrivateKeySource,
   orderDepositAddress,
 } from "./order-deposit.ts";
 import { matchUnusedTransfer } from "./usdc-transfer.ts";
@@ -10,7 +14,47 @@ import { matchUnusedTransfer } from "./usdc-transfer.ts";
 const ROOT =
   "0x55d0c426bccaff91404aaaa8e901b0c94d47c0e1c98703400d6761cffee0cf06";
 
-process.env.MERCHANT_PRIVATE_KEY = ROOT;
+const savedKey = process.env.MERCHANT_PRIVATE_KEY;
+
+beforeEach(() => {
+  process.env.MERCHANT_PRIVATE_KEY = ROOT;
+});
+
+afterEach(() => {
+  if (savedKey === undefined) delete process.env.MERCHANT_PRIVATE_KEY;
+  else process.env.MERCHANT_PRIVATE_KEY = savedKey;
+});
+
+describe("merchantPrivateKeyHex", () => {
+  it("uses the demo seed when the env var is missing", () => {
+    const expected = orderDepositAddress(0);
+    delete process.env.MERCHANT_PRIVATE_KEY;
+    assert.equal(merchantPrivateKeyHex(), ROOT.slice(2));
+    assert.equal(merchantPrivateKeySource(), "demo");
+    assert.equal(merchantPrivateKeyConfigured(), true);
+    assert.equal(orderDepositAddress(0), expected);
+  });
+
+  it("strips wrapping quotes and whitespace", () => {
+    process.env.MERCHANT_PRIVATE_KEY = `  "${ROOT}"  `;
+    assert.equal(merchantPrivateKeyHex(), ROOT.slice(2));
+    assert.equal(merchantPrivateKeySource(), "env");
+  });
+
+  it("strips a KEY= paste prefix", () => {
+    process.env.MERCHANT_PRIVATE_KEY = `MERCHANT_PRIVATE_KEY=${ROOT}`;
+    assert.equal(merchantPrivateKeyHex(), ROOT.slice(2));
+    assert.equal(merchantPrivateKeySource(), "env");
+  });
+
+  it("rejects a too-short key instead of falling back", () => {
+    process.env.MERCHANT_PRIVATE_KEY = "ab";
+    assert.equal(merchantPrivateKeyHex(), undefined);
+    assert.equal(merchantPrivateKeyConfigured(), false);
+    assert.equal(merchantPrivateKeySource(), "invalid");
+    assert.throws(() => orderDepositAddress(0), { message: MERCHANT_KEY_ERROR });
+  });
+});
 
 describe("orderDepositAddress", () => {
   it("is stable for the same HD index", () => {

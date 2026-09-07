@@ -5,13 +5,17 @@ import { DEMO_AUTO_PAY, DEMO_AUTO_PAY_MS, ORDER_TTL_MS, fromMicroUsdc, toMicroUs
 import {
   allocateHdIndex,
   heldDerivationIndices,
+  MERCHANT_KEY_ERROR,
+  merchantPrivateKeyConfigured,
 } from "./order-deposit";
+import { resolveDatabaseUrl } from "./neon";
 import {
   demoTxHash,
   issueOrderToken,
   parseOrderToken,
   voucherCode,
 } from "./order-token";
+import * as neonShop from "./shop-neon";
 
 export type Product = {
   id: number;
@@ -173,6 +177,10 @@ function tryWriteSnapshot(state: ShopState): boolean {
   }
 }
 
+function usingNeon() {
+  return Boolean(resolveDatabaseUrl());
+}
+
 function applyCatalogPrices(state: ShopState) {
   for (const product of state.products) {
     const item = CATALOG.find((entry) => entry.slug === product.slug);
@@ -257,7 +265,7 @@ function attachDerivedVouchers(state: ShopState, order: Order) {
 function synthesizeOrder(id: string): Order | undefined {
   const claims = parseOrderToken(id);
   if (!claims) return undefined;
-  const product = getProductBySlug(claims.slug);
+  const product = loadState().products.find((item) => item.slug === claims.slug);
   if (!product) return undefined;
   const created_at = new Date(claims.createdAtMs).toISOString();
   const aged = Date.now() - claims.createdAtMs >= ORDER_TTL_MS;
@@ -298,35 +306,40 @@ function rememberOrder(order: Order) {
   });
 }
 
-export function listProducts(): Product[] {
+export async function listProducts(): Promise<Product[]> {
+  if (usingNeon()) return neonShop.neonListProducts();
   return loadState().products.filter((product) => product.active === 1);
 }
 
-export function listAllProducts(): Product[] {
+export async function listAllProducts(): Promise<Product[]> {
+  if (usingNeon()) return neonShop.neonListAllProducts();
   return loadState().products;
 }
 
-export function getProduct(id: number): Product | undefined {
+export async function getProduct(id: number): Promise<Product | undefined> {
+  if (usingNeon()) return neonShop.neonGetProduct(id);
   return loadState().products.find((product) => product.id === id);
 }
 
-export function getProductBySlug(slug: string): Product | undefined {
+export async function getProductBySlug(slug: string): Promise<Product | undefined> {
+  if (usingNeon()) return neonShop.neonGetProductBySlug(slug);
   return loadState().products.find((product) => product.slug === slug);
 }
 
-export function countAvailable(productId: number): number {
+export async function countAvailable(productId: number): Promise<number> {
+  if (usingNeon()) return neonShop.neonCountAvailable(productId);
   return loadState().vouchers.filter(
     (voucher) => voucher.product_id === productId && voucher.status === "available"
   ).length;
 }
 
-export function createOrder(input: {
+export async function createOrder(input: {
   id?: string;
   productId: number;
   quantity: number;
   buyerAddress?: string;
-}): Order {
-  const product = getProduct(input.productId);
+}): Promise<Order> {
+  const product = await getProduct(input.productId);
   if (!product) {
     throw new Error("Product not found");
   }
@@ -334,8 +347,59 @@ export function createOrder(input: {
   if (!Number.isFinite(quantity) || quantity < 1) {
     throw new Error("Quantity must be at least 1");
   }
+  if (!merchantPrivateKeyConfigured()) {
+    throw new Error(MERCHANT_KEY_ERROR);
+  }
 
   const createdAtMs = Date.now();
+  const claims = input.id ? parseOrderToken(input.id) : null;
+  if (input.id && !claims) throw new Error("Invalid order id");
+
+  if (usingNeon()) {
+    const derivationIndex =
+      claims?.derivationIndex ??
+      allocateHdIndex(await neonShop.neonHeldIndexes());
+    const id =
+      input.id ??
+      issueOrderToken({
+        slug: product.slug,
+        quantity,
+        createdAtMs,
+        derivationIndex,
+      });
+    try {
+      return await neonShop.neonCreateOrder({
+        id,
+        productId: input.productId,
+        quantity,
+        buyerAddress: input.buyerAddress,
+        amountMicro: product.price_micro * quantity,
+        createdAt: new Date(createdAtMs).toISOString(),
+        derivationIndex,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes("orders_live_hd")) {
+        const retryIndex = allocateHdIndex(await neonShop.neonHeldIndexes());
+        const retryId = issueOrderToken({
+          slug: product.slug,
+          quantity,
+          createdAtMs: Date.now(),
+          derivationIndex: retryIndex,
+        });
+        return neonShop.neonCreateOrder({
+          id: retryId,
+          productId: input.productId,
+          quantity,
+          buyerAddress: input.buyerAddress,
+          amountMicro: product.price_micro * quantity,
+          createdAt: new Date().toISOString(),
+          derivationIndex: retryIndex,
+        });
+      }
+      throw error;
+    }
+  }
 
   let created: Order | undefined;
   mutate((state) => {
@@ -394,11 +458,13 @@ export function isInvoiceAged(order: Order, now = Date.now()): boolean {
   return Number.isFinite(created) && now - created >= ORDER_TTL_MS;
 }
 
-export function listPendingOrders(): Order[] {
+export async function listPendingOrders(): Promise<Order[]> {
+  if (usingNeon()) return neonShop.neonListPendingOrders();
   return loadState().orders.filter((order) => order.status === "pending");
 }
 
-export function expireOrder(orderId: string): boolean {
+export async function expireOrder(orderId: string): Promise<boolean> {
+  if (usingNeon()) return neonShop.neonExpireOrder(orderId);
   let expired = false;
   mutate((state) => {
     const order = state.orders.find((item) => item.id === orderId);
@@ -415,7 +481,18 @@ export function expireOrder(orderId: string): boolean {
   return expired;
 }
 
-export function getOrder(id: string): Order | undefined {
+export async function getOrder(id: string): Promise<Order | undefined> {
+  if (usingNeon()) {
+    const stored = await neonShop.neonGetOrder(id);
+    if (!stored) return undefined;
+    if (shouldAutoPay(stored)) {
+      if (await neonShop.neonSetOrderTxHash(stored.id, demoTxHash(stored.id))) {
+        await neonShop.neonFulfillOrder(stored.id);
+      }
+      return neonShop.neonGetOrder(id);
+    }
+    return stored;
+  }
   const stored = loadState().orders.find((order) => order.id === id);
   const order = stored ?? synthesizeOrder(id);
   if (!order) return undefined;
@@ -423,14 +500,15 @@ export function getOrder(id: string): Order | undefined {
     order.derivation_index = parseOrderToken(order.id)?.derivationIndex ?? 0;
   }
   if (shouldAutoPay(order)) {
-    if (setOrderTxHash(order.id, demoTxHash(order.id))) fulfillOrder(order.id);
+    if (await setOrderTxHash(order.id, demoTxHash(order.id))) await fulfillOrder(order.id);
     return loadState().orders.find((item) => item.id === id) ?? order;
   }
   if (!stored) rememberOrder(order);
   return loadState().orders.find((item) => item.id === id) ?? order;
 }
 
-export function setOrderTxHash(id: string, txHash: string): boolean {
+export async function setOrderTxHash(id: string, txHash: string): Promise<boolean> {
+  if (usingNeon()) return neonShop.neonSetOrderTxHash(id, txHash);
   let claimed = false;
   mutate((state) => {
     if (state.orders.some((item) => item.tx_hash === txHash)) return;
@@ -451,7 +529,11 @@ export function setOrderTxHash(id: string, txHash: string): boolean {
   return claimed;
 }
 
-export function fulfillOrder(orderId: string) {
+export async function fulfillOrder(orderId: string) {
+  if (usingNeon()) {
+    await neonShop.neonFulfillOrder(orderId);
+    return;
+  }
   const now = new Date().toISOString();
   mutate((state) => {
     let order = state.orders.find((item) => item.id === orderId);
@@ -476,8 +558,9 @@ export function fulfillOrder(orderId: string) {
   });
 }
 
-export function getVouchersByOrder(orderId: string): Voucher[] {
-  const order = getOrder(orderId);
+export async function getVouchersByOrder(orderId: string): Promise<Voucher[]> {
+  if (usingNeon()) return neonShop.neonGetVouchersByOrder(orderId);
+  const order = await getOrder(orderId);
   if (!order) return [];
   const stored = loadState().vouchers.filter(
     (voucher) => voucher.order_id === orderId
@@ -495,17 +578,23 @@ export function getVouchersByOrder(orderId: string): Voucher[] {
   }));
 }
 
-export function getVoucherById(id: number): VoucherRow | undefined {
+export async function getVoucherById(id: number): Promise<VoucherRow | undefined> {
+  if (usingNeon()) return neonShop.neonGetVoucherById(id);
   const state = loadState();
   const voucher = state.vouchers.find((item) => item.id === id);
   return voucher ? toRow(voucher, state) : undefined;
 }
 
-export function getVoucherByCode(code: string): Voucher | undefined {
+export async function getVoucherByCode(code: string): Promise<Voucher | undefined> {
+  if (usingNeon()) return neonShop.neonGetVoucherByCode(code);
   return loadState().vouchers.find((voucher) => voucher.code === code);
 }
 
-export function addVouchers(productId: number, codes: string[]) {
+export async function addVouchers(productId: number, codes: string[]) {
+  if (usingNeon()) {
+    await neonShop.neonAddVouchers(productId, codes);
+    return;
+  }
   mutate((state) => {
     if (!state.products.some((product) => product.id === productId)) {
       throw new Error("Product not found");
@@ -532,10 +621,11 @@ export function addVouchers(productId: number, codes: string[]) {
   });
 }
 
-export function listVouchers(filter?: {
+export async function listVouchers(filter?: {
   status?: string;
   query?: string;
-}): VoucherRow[] {
+}): Promise<VoucherRow[]> {
+  if (usingNeon()) return neonShop.neonListVouchers(filter);
   const state = loadState();
   return state.vouchers
     .filter((voucher) => {
@@ -553,7 +643,8 @@ export function listVouchers(filter?: {
     .map((voucher) => toRow(voucher, state));
 }
 
-export function voucherStats() {
+export async function voucherStats() {
+  if (usingNeon()) return neonShop.neonVoucherStats();
   const vouchers = loadState().vouchers;
   return {
     total: vouchers.length,
@@ -563,7 +654,8 @@ export function voucherStats() {
   };
 }
 
-export function listRecentActivity(limit = 8): VoucherRow[] {
+export async function listRecentActivity(limit = 8): Promise<VoucherRow[]> {
+  if (usingNeon()) return neonShop.neonListRecentActivity(limit);
   const state = loadState();
   return state.vouchers
     .filter((voucher) =>
@@ -578,14 +670,16 @@ export function listRecentActivity(limit = 8): VoucherRow[] {
     .map((voucher) => toRow(voucher, state));
 }
 
-export function isTxHashUsed(txHash: string): boolean {
+export async function isTxHashUsed(txHash: string): Promise<boolean> {
+  if (usingNeon()) return neonShop.neonIsTxHashUsed(txHash);
   return loadState().orders.some((order) => order.tx_hash === txHash);
 }
 
-export function redeemVoucher(
+export async function redeemVoucher(
   code: string
-): { ok: true } | { ok: false; error: string } {
-  const voucher = getVoucherByCode(code);
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (usingNeon()) return neonShop.neonRedeemVoucher(code);
+  const voucher = await getVoucherByCode(code);
   if (!voucher) return { ok: false, error: "Voucher not found" };
   if (voucher.status === "available" || voucher.status === "reserved") {
     return { ok: false, error: "Voucher has not been purchased yet" };

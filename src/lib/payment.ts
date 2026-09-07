@@ -22,7 +22,7 @@ import { matchUnusedTransfer } from "./usdc-transfer";
 
 const publicClient = createPublicClient({
   chain: CHAIN,
-  transport: http(RPC_URL),
+  transport: http(RPC_URL, { timeout: 8_000 }),
 });
 
 const transferEvent = parseAbiItem(
@@ -103,7 +103,13 @@ export async function findIncomingUsdcTransfer(input: {
         : [{ value: log.args.value, tx: log.transactionHash }]
     );
     const used = new Set(
-      mapped.filter((log) => isTxHashUsed(log.tx)).map((log) => log.tx)
+      (
+        await Promise.all(
+          mapped.map(async (log) =>
+            (await isTxHashUsed(log.tx)) ? log.tx : null
+          )
+        )
+      ).filter((tx): tx is `0x${string}` => Boolean(tx))
     );
     return matchUnusedTransfer(mapped, input.expectedAmountMicro, used);
   } catch {
@@ -112,7 +118,7 @@ export async function findIncomingUsdcTransfer(input: {
 }
 
 export async function reconcileAgedInvoices(): Promise<void> {
-  for (const order of listPendingOrders()) {
+  for (const order of await listPendingOrders()) {
     if (!isInvoiceAged(order)) continue;
     await detectAndFulfill(order);
   }
@@ -121,13 +127,15 @@ export async function reconcileAgedInvoices(): Promise<void> {
 export async function detectAndFulfill(order: Order): Promise<Order> {
   if (order.status === "paid" || order.status === "expired") return order;
 
-  const onchain = await findIncomingUsdcTransfer({
-    expectedAmountMicro: BigInt(order.amount_micro),
-    depositAddress: orderDepositAddress(order.derivation_index),
-  });
-  if (onchain) {
-    if (setOrderTxHash(order.id, onchain)) fulfillOrder(order.id);
-    return getOrder(order.id)!;
+  if (!DEMO_AUTO_PAY) {
+    const onchain = await findIncomingUsdcTransfer({
+      expectedAmountMicro: BigInt(order.amount_micro),
+      depositAddress: orderDepositAddress(order.derivation_index),
+    });
+    if (onchain) {
+      if (await setOrderTxHash(order.id, onchain)) await fulfillOrder(order.id);
+      return (await getOrder(order.id))!;
+    }
   }
 
   if (DEMO_AUTO_PAY) {
@@ -137,14 +145,16 @@ export async function detectAndFulfill(order: Order): Promise<Order> {
         : `${order.created_at.replace(" ", "T")}Z`
     );
     if (Number.isFinite(createdMs) && createdMs >= DEMO_AUTO_PAY_MS) {
-      if (setOrderTxHash(order.id, demoTxHash(order.id))) fulfillOrder(order.id);
-      return getOrder(order.id)!;
+      if (await setOrderTxHash(order.id, demoTxHash(order.id))) {
+        await fulfillOrder(order.id);
+      }
+      return (await getOrder(order.id))!;
     }
   }
 
   if (isInvoiceAged(order)) {
-    expireOrder(order.id);
-    return getOrder(order.id)!;
+    await expireOrder(order.id);
+    return (await getOrder(order.id))!;
   }
 
   return order;

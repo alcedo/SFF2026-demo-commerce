@@ -221,8 +221,14 @@ function writeDemoEnv(appDir, url) {
     "ORDER_SECRET=vouchershop-demo",
     `APP_URL=${url}`,
     "MERCHANT_ADDRESS=0x006450335E618A9Fae2ad89542af411C8668d87D",
+    "MERCHANT_PRIVATE_KEY=0x55d0c426bccaff91404aaaa8e901b0c94d47c0e1c98703400d6761cffee0cf06",
     "SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com",
     "NEXT_PUBLIC_SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com",
+    "DATABASE_URL=",
+    "POSTGRES_URL=",
+    "DATABASE_URL_UNPOOLED=",
+    "POSTGRES_URL_NON_POOLING=",
+    "POSTGRES_PRISMA_URL=",
     "",
   ].join("\n");
   writeFileSync(path.join(appDir, ".env.local"), body);
@@ -273,6 +279,11 @@ async function cmdLaunch(flags) {
         ...process.env,
         PORT: String(port),
         APP_URL: url,
+        DATABASE_URL: "",
+        POSTGRES_URL: "",
+        DATABASE_URL_UNPOOLED: "",
+        POSTGRES_URL_NON_POOLING: "",
+        POSTGRES_PRISMA_URL: "",
       },
     }
   );

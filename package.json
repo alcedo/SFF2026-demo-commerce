@@ -9,16 +9,18 @@
     "start": "next start",
     "lint": "eslint",
     "setup:env": "node scripts/setup-env.mjs",
+    "db:ping": "node scripts/db-ping.mjs",
     "test:e2e": "node --env-file=.env.local scripts/fund-fork.mjs && node --env-file=.env.local scripts/e2e-purchase.mjs",
     "test:e2e:ten": "node --env-file=config/test-wallets.env --env-file=config/anvil.env scripts/e2e-ten-buyers.mjs",
     "verify:purchase": "node scripts/verify-purchase.mjs",
-    "test": "node --experimental-strip-types --test src/lib/order-deposit.test.ts"
+    "test": "node --experimental-strip-types --test src/lib/order-deposit.test.ts src/lib/neon.test.ts"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "@scure/bip32": "^1.7.0",
     "next": "16.3.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "@scure/bip32": "^1.7.0",
     "viem": "^2.56.3"
   },
   "devDependencies": {

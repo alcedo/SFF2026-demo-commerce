@@ -12,9 +12,9 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const record = getProductBySlug(slug);
+  const record = await getProductBySlug(slug);
   if (!record) notFound();
-  const product = toPublicProduct(record);
+  const product = await toPublicProduct(record);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">

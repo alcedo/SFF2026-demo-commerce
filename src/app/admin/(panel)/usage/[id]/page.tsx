@@ -10,7 +10,7 @@ export default async function UsageDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const voucher = getVoucherById(Number(id));
+  const voucher = await getVoucherById(Number(id));
   if (!voucher) notFound();
 
   const rows = [
