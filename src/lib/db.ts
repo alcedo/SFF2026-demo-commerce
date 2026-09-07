@@ -1,7 +1,11 @@
 import fs from "fs";
 import path from "path";
 import { CATALOG } from "./catalog";
-import { DEMO_AUTO_PAY, DEMO_AUTO_PAY_MS, toMicroUsdc } from "./config";
+import { DEMO_AUTO_PAY, DEMO_AUTO_PAY_MS, ORDER_TTL_MS, toMicroUsdc } from "./config";
+import {
+  allocateHdIndex,
+  heldDerivationIndices,
+} from "./order-deposit";
 import {
   demoTxHash,
   issueOrderToken,
@@ -29,6 +33,7 @@ export type Order = {
   quantity: number;
   buyer_address: string | null;
   amount_micro: number;
+  derivation_index: number;
   tx_hash: string | null;
   status: "pending" | "paid" | "expired";
   created_at: string;
@@ -242,14 +247,16 @@ function synthesizeOrder(id: string): Order | undefined {
   const product = getProductBySlug(claims.slug);
   if (!product) return undefined;
   const created_at = new Date(claims.createdAtMs).toISOString();
+  const aged = Date.now() - claims.createdAtMs >= ORDER_TTL_MS;
   const order: Order = {
     id,
     product_id: product.id,
     quantity: claims.quantity,
     buyer_address: null,
     amount_micro: product.price_micro * claims.quantity,
+    derivation_index: claims.derivationIndex,
     tx_hash: null,
-    status: "pending",
+    status: aged ? "expired" : "pending",
     created_at,
     paid_at: null,
   };
@@ -266,7 +273,7 @@ function rememberOrder(order: Order) {
     const index = state.orders.findIndex((item) => item.id === order.id);
     if (index === -1) state.orders.push(order);
     else state.orders[index] = order;
-    attachDerivedVouchers(state, order);
+    if (order.status !== "expired") attachDerivedVouchers(state, order);
     if (order.status === "paid") {
       for (const voucher of state.vouchers) {
         if (voucher.order_id === order.id && voucher.status === "reserved") {
@@ -316,13 +323,6 @@ export function createOrder(input: {
   }
 
   const createdAtMs = Date.now();
-  const id =
-    input.id ??
-    issueOrderToken({
-      slug: product.slug,
-      quantity,
-      createdAtMs,
-    });
 
   let created: Order | undefined;
   mutate((state) => {
@@ -333,12 +333,26 @@ export function createOrder(input: {
     if (available.length < quantity) {
       throw new Error("Not enough vouchers in stock");
     }
+    const claims = input.id ? parseOrderToken(input.id) : null;
+    if (input.id && !claims) throw new Error("Invalid order id");
+    const derivationIndex =
+      claims?.derivationIndex ??
+      allocateHdIndex(heldDerivationIndices(state.orders));
+    const id =
+      input.id ??
+      issueOrderToken({
+        slug: product.slug,
+        quantity,
+        createdAtMs,
+        derivationIndex,
+      });
     const order: Order = {
       id,
       product_id: input.productId,
       quantity,
       buyer_address: input.buyerAddress ?? null,
       amount_micro: product.price_micro * quantity,
+      derivation_index: derivationIndex,
       tx_hash: null,
       status: "pending",
       created_at: new Date(createdAtMs).toISOString(),
@@ -355,10 +369,46 @@ export function createOrder(input: {
   return created!;
 }
 
+export function orderCreatedMs(order: Order): number {
+  const raw = order.created_at.includes("T")
+    ? order.created_at
+    : `${order.created_at.replace(" ", "T")}Z`;
+  return Date.parse(raw);
+}
+
+export function isInvoiceAged(order: Order, now = Date.now()): boolean {
+  const created = orderCreatedMs(order);
+  return Number.isFinite(created) && now - created >= ORDER_TTL_MS;
+}
+
+export function listPendingOrders(): Order[] {
+  return loadState().orders.filter((order) => order.status === "pending");
+}
+
+export function expireOrder(orderId: string): boolean {
+  let expired = false;
+  mutate((state) => {
+    const order = state.orders.find((item) => item.id === orderId);
+    if (!order || order.status !== "pending") return;
+    order.status = "expired";
+    expired = true;
+    for (const voucher of state.vouchers) {
+      if (voucher.order_id === orderId && voucher.status === "reserved") {
+        voucher.status = "available";
+        voucher.order_id = null;
+      }
+    }
+  });
+  return expired;
+}
+
 export function getOrder(id: string): Order | undefined {
   const stored = loadState().orders.find((order) => order.id === id);
   const order = stored ?? synthesizeOrder(id);
   if (!order) return undefined;
+  if (!Number.isInteger(order.derivation_index)) {
+    order.derivation_index = parseOrderToken(order.id)?.derivationIndex ?? 0;
+  }
   if (shouldAutoPay(order)) {
     if (setOrderTxHash(order.id, demoTxHash(order.id))) fulfillOrder(order.id);
     return loadState().orders.find((item) => item.id === id) ?? order;
@@ -380,7 +430,7 @@ export function setOrderTxHash(id: string, txHash: string): boolean {
         order = synthesized;
       }
     }
-    if (order && !order.tx_hash) {
+    if (order && order.status !== "expired" && !order.tx_hash) {
       order.tx_hash = txHash;
       claimed = true;
     }
@@ -400,7 +450,7 @@ export function fulfillOrder(orderId: string) {
         order = synthesized;
       }
     }
-    if (!order) return;
+    if (!order || order.status === "expired") return;
     order.status = "paid";
     order.paid_at = now;
     attachDerivedVouchers(state, order);

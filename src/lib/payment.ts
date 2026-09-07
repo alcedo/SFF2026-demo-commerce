@@ -7,9 +7,12 @@ import {
   USDC_ADDRESS,
 } from "./config";
 import {
+  expireOrder,
   fulfillOrder,
   getOrder,
+  isInvoiceAged,
   isTxHashUsed,
+  listPendingOrders,
   setOrderTxHash,
   type Order,
 } from "./db";
@@ -108,12 +111,19 @@ export async function findIncomingUsdcTransfer(input: {
   }
 }
 
+export async function reconcileAgedInvoices(): Promise<void> {
+  for (const order of listPendingOrders()) {
+    if (!isInvoiceAged(order)) continue;
+    await detectAndFulfill(order);
+  }
+}
+
 export async function detectAndFulfill(order: Order): Promise<Order> {
-  if (order.status === "paid") return order;
+  if (order.status === "paid" || order.status === "expired") return order;
 
   const onchain = await findIncomingUsdcTransfer({
     expectedAmountMicro: BigInt(order.amount_micro),
-    depositAddress: orderDepositAddress(order.id),
+    depositAddress: orderDepositAddress(order.derivation_index),
   });
   if (onchain) {
     if (setOrderTxHash(order.id, onchain)) fulfillOrder(order.id);
@@ -130,6 +140,11 @@ export async function detectAndFulfill(order: Order): Promise<Order> {
       if (setOrderTxHash(order.id, demoTxHash(order.id))) fulfillOrder(order.id);
       return getOrder(order.id)!;
     }
+  }
+
+  if (isInvoiceAged(order)) {
+    expireOrder(order.id);
+    return getOrder(order.id)!;
   }
 
   return order;

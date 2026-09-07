@@ -26,6 +26,7 @@ export type PublicOrder = {
   amountMicro: number;
   amountLabel: string;
   merchantAddress: string;
+  derivationIndex: number;
   usdcAddress: string;
   txHash: string | null;
   createdAt: string;
@@ -69,7 +70,8 @@ export function toPublicOrder(order: Order): PublicOrder {
     amountUsdc: fromMicroUsdc(order.amount_micro),
     amountMicro: order.amount_micro,
     amountLabel: `${formatUsdc(order.amount_micro)} USDC`,
-    merchantAddress: orderDepositAddress(order.id),
+    merchantAddress: orderDepositAddress(order.derivation_index),
+    derivationIndex: order.derivation_index,
     usdcAddress: USDC_ADDRESS,
     txHash: order.tx_hash,
     createdAt: order.created_at,

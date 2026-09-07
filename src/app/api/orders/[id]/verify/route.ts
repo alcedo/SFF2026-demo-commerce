@@ -21,6 +21,10 @@ export async function POST(
     return NextResponse.json({ order: toPublicOrder(order) });
   }
 
+  if (order.status === "expired") {
+    return NextResponse.json({ error: "Invoice expired" }, { status: 410 });
+  }
+
   if (!txHash) {
     return NextResponse.json({ error: "Missing txHash" }, { status: 400 });
   }
@@ -28,7 +32,7 @@ export async function POST(
   const verification = await verifyUsdcPayment({
     txHash,
     expectedAmountMicro: BigInt(order.amount_micro),
-    depositAddress: orderDepositAddress(id),
+    depositAddress: orderDepositAddress(order.derivation_index),
     buyerAddress: order.buyer_address ?? undefined,
   });
 
