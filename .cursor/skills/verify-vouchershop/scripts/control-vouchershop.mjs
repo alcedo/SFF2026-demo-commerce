@@ -7,12 +7,10 @@ import {
   mkdirSync,
   readFileSync,
   rmSync,
-  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { createServer } from "node:net";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 const ROOT_DEFAULT = findRepoRoot(process.cwd());
 const STATE_PATH = "/tmp/vouchershop-verify/current.json";
@@ -205,8 +203,12 @@ function copyApp(repo, dest) {
       return !skipTop.has(rel.split(path.sep)[0]);
     },
   });
-  const modules = path.join(dest, "node_modules");
-  if (!existsSync(modules)) symlinkSync(path.join(repo, "node_modules"), modules);
+  // Turbopack refuses a node_modules symlink that points outside the project root.
+  const modulesSrc = path.join(repo, "node_modules");
+  const modulesDest = path.join(dest, "node_modules");
+  if (!existsSync(modulesDest)) {
+    cpSync(modulesSrc, modulesDest, { recursive: true });
+  }
 }
 
 function writeDemoEnv(appDir, url) {
@@ -302,6 +304,10 @@ async function cmdLaunch(flags) {
       }
     }
     if (existsSync(STATE_PATH)) rmSync(STATE_PATH);
+    if (!inPlace) {
+      const runDir = path.join(VERIFY_ROOT, "runs", runId);
+      if (existsSync(runDir)) rmSync(runDir, { recursive: true, force: true });
+    }
     die(`launch: ${error instanceof Error ? error.message : error}\nlog: ${logPath}`);
   }
 

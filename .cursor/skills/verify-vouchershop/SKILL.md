@@ -45,7 +45,7 @@ Verification start (isolated scratch, pinned port). Do this instead of attaching
 
 Ready when the command exits 0 and prints a `url`. Default URL is `http://127.0.0.1:4173`. State is `/tmp/vouchershop-verify/current.json`.
 
-`launch` copies the app into `/tmp/vouchershop-verify/runs/<run-id>/app`, writes a demo `.env.local` (no wallet keys), and starts `next dev --hostname 127.0.0.1 --port 4173` from that copy. Shop state lives in the copy's `data/vouchershop.json`, not the repo's.
+`launch` copies the app (including `node_modules`, because Turbopack rejects an out-of-tree symlink) into `/tmp/vouchershop-verify/runs/<run-id>/app`, writes a demo `.env.local` (no wallet keys), and starts `next dev --hostname 127.0.0.1 --port 4173` from that copy. Shop state lives in the copy's `data/vouchershop.json`, not the repo's.
 
 `--in-place` starts from the repo cwd and will read/write `data/vouchershop.json` there. Use it only when you own that tree.
 
