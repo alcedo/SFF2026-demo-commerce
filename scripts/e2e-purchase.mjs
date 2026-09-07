@@ -53,7 +53,8 @@ async function main() {
   const order = orderData.order;
   console.log("Order created:", order.id);
 
-  const amount = BigInt(order.amountMicro ?? Math.round(order.amountUsdc * 1e6));
+  if (order.amountMicro == null) throw new Error("Order missing amountMicro");
+  const amount = BigInt(order.amountMicro);
   const balance = await publicClient.readContract({
     address: USDC,
     abi: erc20Abi,

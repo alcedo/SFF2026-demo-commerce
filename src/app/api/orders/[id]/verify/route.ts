@@ -34,7 +34,9 @@ export async function POST(
     return NextResponse.json({ error: verification.error }, { status: 400 });
   }
 
-  setOrderTxHash(id, txHash);
+  if (!setOrderTxHash(id, txHash)) {
+    return NextResponse.json({ error: "Transaction already used" }, { status: 409 });
+  }
   fulfillOrder(id);
   return NextResponse.json({ order: toPublicOrder(getOrder(id)!) });
 }

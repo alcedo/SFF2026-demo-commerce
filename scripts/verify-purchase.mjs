@@ -21,9 +21,10 @@ async function main() {
   if (orderData.order.voucherCodes?.length) {
     throw new Error("Pending order leaked codes");
   }
+  const catalogUsdc = 75;
   const payable = orderData.order.amountUsdc;
-  if (payable < 75 || payable >= 76) {
-    throw new Error(`Expected 75.xxxxxx USDC, got ${payable}`);
+  if (payable < catalogUsdc || payable >= catalogUsdc + 0.01) {
+    throw new Error(`Expected ${catalogUsdc}.xxxxxx USDC, got ${payable}`);
   }
 
   let paid = null;

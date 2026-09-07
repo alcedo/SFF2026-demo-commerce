@@ -2,6 +2,7 @@ import { randomInt } from "crypto";
 
 export const PAY_TAG_MIN = 1;
 export const PAY_TAG_MAX = 9_999;
+export const PAY_TAG_ALLOCATE_ATTEMPTS = 32;
 
 export function newPayTag(): number {
   return randomInt(PAY_TAG_MIN, PAY_TAG_MAX + 1);

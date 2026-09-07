@@ -8,7 +8,11 @@ import {
   parseOrderToken,
   voucherCode,
 } from "./order-token";
-import { newPayTag, payableAmountMicro } from "./payable-amount";
+import {
+  newPayTag,
+  PAY_TAG_ALLOCATE_ATTEMPTS,
+  payableAmountMicro,
+} from "./payable-amount";
 
 export type Product = {
   id: number;
@@ -342,7 +346,7 @@ export function createOrder(input: {
       payTag = claims.payTag;
     } else {
       payTag = newPayTag();
-      for (let attempt = 0; attempt < 32; attempt += 1) {
+      for (let attempt = 0; attempt < PAY_TAG_ALLOCATE_ATTEMPTS; attempt += 1) {
         if (!taken.has(payableAmountMicro(baseMicro, payTag))) break;
         payTag = newPayTag();
       }
@@ -386,15 +390,15 @@ export function getOrder(id: string): Order | undefined {
   const order = stored ?? synthesizeOrder(id);
   if (!order) return undefined;
   if (shouldAutoPay(order)) {
-    setOrderTxHash(order.id, demoTxHash(order.id));
-    fulfillOrder(order.id);
+    if (setOrderTxHash(order.id, demoTxHash(order.id))) fulfillOrder(order.id);
     return loadState().orders.find((item) => item.id === id) ?? order;
   }
   if (!stored) rememberOrder(order);
   return loadState().orders.find((item) => item.id === id) ?? order;
 }
 
-export function setOrderTxHash(id: string, txHash: string) {
+export function setOrderTxHash(id: string, txHash: string): boolean {
+  let claimed = false;
   mutate((state) => {
     if (state.orders.some((item) => item.tx_hash === txHash)) return;
     let order = state.orders.find((item) => item.id === id);
@@ -406,8 +410,12 @@ export function setOrderTxHash(id: string, txHash: string) {
         order = synthesized;
       }
     }
-    if (order && !order.tx_hash) order.tx_hash = txHash;
+    if (order && !order.tx_hash) {
+      order.tx_hash = txHash;
+      claimed = true;
+    }
   });
+  return claimed;
 }
 
 export function fulfillOrder(orderId: string) {

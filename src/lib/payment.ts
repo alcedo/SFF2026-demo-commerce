@@ -113,8 +113,7 @@ export async function detectAndFulfill(order: Order): Promise<Order> {
     expectedAmountMicro: BigInt(order.amount_micro),
   });
   if (onchain) {
-    setOrderTxHash(order.id, onchain);
-    fulfillOrder(order.id);
+    if (setOrderTxHash(order.id, onchain)) fulfillOrder(order.id);
     return getOrder(order.id)!;
   }
 
@@ -125,8 +124,7 @@ export async function detectAndFulfill(order: Order): Promise<Order> {
         : `${order.created_at.replace(" ", "T")}Z`
     );
     if (Number.isFinite(createdMs) && createdMs >= DEMO_AUTO_PAY_MS) {
-      setOrderTxHash(order.id, demoTxHash(order.id));
-      fulfillOrder(order.id);
+      if (setOrderTxHash(order.id, demoTxHash(order.id))) fulfillOrder(order.id);
       return getOrder(order.id)!;
     }
   }
