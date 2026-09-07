@@ -24,7 +24,6 @@ export type PublicOrder = {
   quantity: number;
   amountUsdc: number;
   amountMicro: number;
-  amountExact: string;
   amountLabel: string;
   merchantAddress: string;
   usdcAddress: string;
@@ -69,7 +68,6 @@ export function toPublicOrder(order: Order): PublicOrder {
     quantity: order.quantity,
     amountUsdc: fromMicroUsdc(order.amount_micro),
     amountMicro: order.amount_micro,
-    amountExact: formatUsdc(order.amount_micro),
     amountLabel: `${formatUsdc(order.amount_micro)} USDC`,
     merchantAddress: orderDepositAddress(order.id),
     usdcAddress: USDC_ADDRESS,
