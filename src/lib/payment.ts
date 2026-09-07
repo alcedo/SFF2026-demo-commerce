@@ -48,6 +48,9 @@ export async function verifyUsdcPayment(input: {
     });
 
     const match = logs.find((log) => {
+      if (log.transactionHash.toLowerCase() !== input.txHash.toLowerCase()) {
+        return false;
+      }
       const to = log.args.to?.toLowerCase();
       const from = log.args.from?.toLowerCase();
       const value = log.args.value;

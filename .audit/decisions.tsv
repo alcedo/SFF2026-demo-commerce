@@ -16,3 +16,4 @@ ts	phase	decision	why	evidence	result
 2026-09-07T05:51:29Z	fix	Extract tryWriteSnapshot so memory fallback needs no comment	Comment Sicko flagged the silent catch as an alibi	src/lib/db.ts writeState	done
 2026-09-07T05:53:49Z	copy	Tell the live site it is a demo while auto-pay is on	Gap analysis MUST FIX. Header and checkout claimed Live Sepolia	src/components/site-header.tsx src/app/(store)/checkout/[orderId]/page.tsx	open
 2026-09-07T05:53:49Z	fix	Hide ready banner until codes exist	Pending /order/[id] used quantity when codes were empty	src/app/(store)/order/[id]/page.tsx	open
+2026-09-07T05:56:08Z	fix	Bind verifyUsdcPayment to the submitted tx hash	Block-wide log scan could accept another transfer in the same block	src/lib/payment.ts verifyUsdcPayment	done
