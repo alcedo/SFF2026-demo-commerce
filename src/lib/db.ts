@@ -145,35 +145,44 @@ function seedState(): ShopState {
   return { products, orders: [], vouchers, nextVoucherId };
 }
 
-function loadState(): ShopState {
-  if (globalForShop.__voucherShop) return globalForShop.__voucherShop;
+function tryReadSnapshot(): ShopState | undefined {
   const file = persistPath();
   try {
-    if (fs.existsSync(/* turbopackIgnore: true */ file)) {
-      const parsed = JSON.parse(
-        fs.readFileSync(/* turbopackIgnore: true */ file, "utf8")
-      ) as ShopState;
-      globalForShop.__voucherShop = parsed;
-      return parsed;
-    }
+    if (!fs.existsSync(/* turbopackIgnore: true */ file)) return undefined;
+    return JSON.parse(
+      fs.readFileSync(/* turbopackIgnore: true */ file, "utf8")
+    ) as ShopState;
   } catch {
-    // seed
+    return undefined;
+  }
+}
+
+function tryWriteSnapshot(state: ShopState): boolean {
+  const file = persistPath();
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, JSON.stringify(state));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function loadState(): ShopState {
+  if (globalForShop.__voucherShop) return globalForShop.__voucherShop;
+  const snapshot = tryReadSnapshot();
+  if (snapshot) {
+    globalForShop.__voucherShop = snapshot;
+    return snapshot;
   }
   const seeded = seedState();
-  globalForShop.__voucherShop = seeded;
   writeState(seeded);
   return seeded;
 }
 
 function writeState(state: ShopState) {
   globalForShop.__voucherShop = state;
-  const file = persistPath();
-  try {
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, JSON.stringify(state));
-  } catch {
-    // memory only when the filesystem is read-only
-  }
+  tryWriteSnapshot(state);
 }
 
 function mutate(fn: (state: ShopState) => void) {
