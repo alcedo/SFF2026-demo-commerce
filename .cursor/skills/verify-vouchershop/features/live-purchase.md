@@ -30,7 +30,7 @@ Preconditions:
 
 - **Create order.** Choose `Buy now · 0.025 USDC`. The next heading is `Complete your purchase`. Checkout says `Send 0.025 USDC to this order's address` and does not say `You do not need to send USDC`.
 - **Hold.** Wait 12 seconds on checkout. Status stays pending. Heading is still `Complete your purchase`.
-- **Pay.** From the repo, run `APP_URL=$URL npm run test:live` after creating the order, or send the invoice amount of Sepolia USDC to `merchantAddress` and keep the checkout tab open. Checkout is a document load. It reloads every 2.5s so Vercel share auth can confirm pay. Do not rely on `fetch('/api/orders')` behind Deployment Protection.
+- **Pay.** From the repo, run `APP_URL=$URL npm run test:live` after creating the order, or send the invoice amount of Sepolia USDC to `merchantAddress` and keep the checkout tab open. Checkout HTML is a database read. Detection is `POST /api/orders/<id>` every 2.5s. Do not use `GET /api/orders` behind a share link. That GET 302s to SSO.
 - **Receipt.** Success heading is `Payment successful`. Amount is `0.025 USDC`. Network is `Sepolia`. Transaction hash is not `0x` plus sha256 of `demo:<orderId>`.
 - **Reveal.** Choose `View my voucher`. Banner reads `Your vouchers are ready.` JSON `txHash` matches the on-chain USDC transfer.
 - **Proof.** Capture `$EVIDENCE/live-purchase/order.aria.txt` and `$EVIDENCE/live-purchase/order.png`, plus the paid JSON. Artifacts show AgentiX and the code. `npm run test:live` writes the same tx and asserts deposit `balanceOf` rose by the invoice.
@@ -39,6 +39,6 @@ Preconditions:
 
 - `NEXT_PUBLIC_DEMO_AUTO_PAY` is baked at build. Setting it to `0` without a new Preview still shows `Demo · Sepolia`.
 - Isolated `launch` turns demo auto-pay on. Do not run this recipe against `http://127.0.0.1:4173`.
-- Preview APIs sit behind Vercel Authentication. A share link sets `_vercel_jwt` for document navigations. Client `fetch('/api/...')` still 302s to SSO. Open HTML routes with the share cookie, not raw API URLs.
+- Preview APIs sit behind Vercel Authentication. A share link sets `_vercel_jwt` for document navigations and for POST. Client `GET /api/orders` still 302s to SSO. Open HTML routes with the share cookie. Poll pay with POST.
 - Public Sepolia RPC can time out `getLogs`. `POST /api/orders/<id>/verify` with the tx hash is the fallback the live script uses first.
 - Quantity 1 Amazon costs 0.025 USDC. A dry buyer address fails the script before it broadcasts.

@@ -15,11 +15,28 @@ export function CheckoutView({ order }: { order: PublicOrder }) {
   const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
+    let active = true;
+    async function poll() {
+      try {
+        const res = await fetch(`/api/orders/${order.id}`, { method: "POST" });
+        const data = (await res.json()) as { order?: PublicOrder };
+        if (!active) return;
+        if (data.order?.status === "paid") {
+          router.replace(`/processing/${data.order.id}`);
+        }
+      } catch {
+        return;
+      }
+    }
+    void poll();
     const timer = window.setInterval(() => {
-      window.location.reload();
+      void poll();
     }, 2500);
-    return () => window.clearInterval(timer);
-  }, []);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, [order.id, router]);
 
   async function cancel() {
     if (cancelling) return;

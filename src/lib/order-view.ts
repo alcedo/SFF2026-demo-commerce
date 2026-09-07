@@ -2,7 +2,6 @@ import { catalogBySlug } from "./catalog";
 import { formatUsdc, fromMicroUsdc, USDC_ADDRESS } from "./config";
 import { countAvailable, getOrder, getProduct, getVouchersByOrder, type Order, type Product } from "./db";
 import { orderDepositAddress } from "./order-deposit";
-import { detectAndFulfill } from "./payment";
 
 export type PublicProduct = {
   id: number;
@@ -62,7 +61,7 @@ export async function toPublicProduct(product: Product): Promise<PublicProduct> 
 export async function loadPublicOrder(id: string): Promise<PublicOrder | null> {
   const order = await getOrder(id);
   if (!order) return null;
-  return toPublicOrder(await detectAndFulfill(order));
+  return toPublicOrder(order);
 }
 
 export async function toPublicOrder(order: Order): Promise<PublicOrder> {
