@@ -2,6 +2,7 @@
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
+  cpSync,
   existsSync,
   mkdirSync,
   readFileSync,
@@ -195,27 +196,15 @@ async function waitForHttp(url, timeoutMs) {
 
 function copyApp(repo, dest) {
   mkdirSync(dest, { recursive: true });
-  const rsync = spawnSync(
-    "rsync",
-    [
-      "-a",
-      "--delete",
-      "--exclude",
-      "node_modules",
-      "--exclude",
-      ".next",
-      "--exclude",
-      ".git",
-      "--exclude",
-      "data",
-      "--exclude",
-      ".cursor",
-      `${repo}/`,
-      `${dest}/`,
-    ],
-    { stdio: "inherit" }
-  );
-  if (rsync.status !== 0) die("launch: rsync failed");
+  const skipTop = new Set(["node_modules", ".next", ".git", "data", ".cursor"]);
+  cpSync(repo, dest, {
+    recursive: true,
+    filter: (src) => {
+      const rel = path.relative(repo, src);
+      if (!rel || rel === ".") return true;
+      return !skipTop.has(rel.split(path.sep)[0]);
+    },
+  });
   const modules = path.join(dest, "node_modules");
   if (!existsSync(modules)) symlinkSync(path.join(repo, "node_modules"), modules);
 }
