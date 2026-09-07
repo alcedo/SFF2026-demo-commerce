@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Red_Hat_Display, Red_Hat_Mono } from "next/font/google";
 import "./globals.css";
-import { Providers } from "@/components/providers";
 
 const display = Red_Hat_Display({
   variable: "--font-display",
@@ -27,7 +26,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       className={`${display.variable} ${redHatMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-ink text-paper">
-        <Providers>{children}</Providers>
+        {children}
       </body>
     </html>
   );

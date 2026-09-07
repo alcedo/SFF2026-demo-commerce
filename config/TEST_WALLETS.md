@@ -1,6 +1,6 @@
 # Test Wallets
 
-Sepolia testnet wallets used for VoucherVault development and E2E tests.
+Sepolia testnet wallets used for VoucherShop development and E2E tests.
 
 > **Testnet only.** These keys are committed so cloud agents and teammates can reuse the same wallets across sessions. Never reuse this pattern on mainnet.
 
