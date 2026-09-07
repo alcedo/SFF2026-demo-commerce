@@ -24,6 +24,11 @@ const publicClient = createPublicClient({
   transport: http(RPC_URL),
 });
 
+const scanClient = createPublicClient({
+  chain: CHAIN,
+  transport: http(RPC_URL, { timeout: 4_000 }),
+});
+
 const transferEvent = parseAbiItem(
   "event Transfer(address indexed from, address indexed to, uint256 value)"
 );
@@ -86,10 +91,10 @@ export async function findIncomingUsdcTransfer(input: {
   depositAddress: `0x${string}`;
 }): Promise<`0x${string}` | null> {
   try {
-    const latest = await publicClient.getBlockNumber();
+    const latest = await scanClient.getBlockNumber();
     const lookback = BigInt(80);
     const fromBlock = latest > lookback ? latest - lookback : BigInt(0);
-    const logs = await publicClient.getLogs({
+    const logs = await scanClient.getLogs({
       address: USDC_ADDRESS,
       event: transferEvent,
       args: { to: input.depositAddress },

@@ -31,6 +31,9 @@ describe("POST /api/orders buy path", () => {
     const poll = readSrc("../app/api/orders/[id]/route.ts");
     const verify = readSrc("../app/api/orders/[id]/verify/route.ts");
     assert.match(poll, /detectAndFulfill/);
+    assert.match(poll, /\bafter\(/);
+    assert.match(poll, /toPublicOrder\(order\)/);
+    assert.doesNotMatch(poll, /await detectAndFulfill\(order\)/);
     assert.match(verify, /verifyUsdcPayment/);
   });
 });

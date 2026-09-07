@@ -19,17 +19,24 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     let active = true;
+    let inflight = false;
     async function load() {
-      const res = await fetch(`/api/orders/${params.orderId}`);
-      const data = (await res.json()) as { order?: PublicOrder; error?: string };
-      if (!active) return;
-      if (!res.ok || !data.order) {
-        setError(data.error ?? "Order not found");
-        return;
-      }
-      setOrder(data.order);
-      if (data.order.status === "paid") {
-        router.replace(`/processing/${data.order.id}`);
+      if (inflight) return;
+      inflight = true;
+      try {
+        const res = await fetch(`/api/orders/${params.orderId}`);
+        const data = (await res.json()) as { order?: PublicOrder; error?: string };
+        if (!active) return;
+        if (!res.ok || !data.order) {
+          setError(data.error ?? "Order not found");
+          return;
+        }
+        setOrder(data.order);
+        if (data.order.status === "paid") {
+          router.replace(`/processing/${data.order.id}`);
+        }
+      } finally {
+        inflight = false;
       }
     }
     load();

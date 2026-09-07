@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
   try {
     // Free aged reservations without Sepolia getLogs. On-chain detect stays on
-    // GET /api/orders/[id] and POST verify.
+    // GET /api/orders/[id] (after the response) and POST verify.
     expireAgedInvoices();
     const order = createOrder({
       productId: product.id,
