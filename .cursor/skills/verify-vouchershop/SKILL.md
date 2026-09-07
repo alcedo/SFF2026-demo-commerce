@@ -82,7 +82,8 @@ Stable handles (current copy):
 
 | Intent | Handle |
 |---|---|
-| Home heading | `getByRole('heading', { level: 1, name: /Buy digital vouchers/ })` |
+| Home heading | `getByRole('heading', { level: 1, name: /Buy digital vouchers/ })` (full name is `Buy digital vouchers with stablecoin.`) |
+| Brand | `getByRole('link', { name: 'AgentiX Playground' })` |
 | Catalog from home | `getByRole('link', { name: 'Enter voucher rails' })` |
 | Catalog from nav | `getByRole('link', { name: 'Vouchers' })` |
 | Redeem help | `getByRole('link', { name: 'How it works' })` |
@@ -133,6 +134,8 @@ Minimum files for a feature proof:
 - `*.json` — order or products payload when the feature mutates or lists stock
 
 Record the feature file and entry point in the artifact names.
+
+If the browser tool refuses `/tmp` (Playwright MCP's allowed roots are the workspace), write `*.png` / `*.aria.txt` under the repo first, then copy them into `$EVIDENCE`. Do not commit those workspace copies.
 
 ## Cleanup
 

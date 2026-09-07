@@ -45,3 +45,5 @@ Preconditions:
 - Category values are `Shopping`, `Streaming`, `Gaming`, `Apps`, `Delivery`. Anything else is ignored because the select only offers those plus `All Categories`.
 - Home popular is a subset (`amazon`, `netflix`, `steam`). Proving home is not proving the full grid.
 - Isolated launch seeds 12 available codes per product plus one used Amazon and one expired Netflix. `available` on Amazon is 12, not 13.
+- Search is React-controlled. Setting `input.value` in JS (or a raw DOM wipe) leaves the filter on the old query while the field looks empty. Clear with the same fill/keystroke path you used to type (`fill('')` or select-all then delete).
+- The home heading's accessible name is `Buy digital vouchers with stablecoin.` Match `/Buy digital vouchers/`. The brand link's name is `AgentiX Playground`.
