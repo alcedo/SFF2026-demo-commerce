@@ -8,7 +8,7 @@ This directory is the maintained source for verifying the user-facing behavior o
 - Doctor that instance: `.cursor/skills/verify-vouchershop/scripts/control-vouchershop doctor`.
 - Expected URL: `http://127.0.0.1:4173` unless `launch` printed another port.
 - Home copy includes `eight seconds` and the header chip `Demo · Sepolia`.
-- Seed catalog includes Amazon ($25 / 25 USDC), Netflix ($15), Steam ($20), plus six more brands. Each active product starts with 12 available codes.
+- Seed catalog includes Amazon ($0.025 / 0.025 USDC), Netflix ($0.015), Steam ($0.02), plus six more brands. Each active product starts with 12 available codes.
 - Admin login is `admin` / `admin123`.
 - Never drive an instance that this run did not launch, unless the operator owns the URL and doctor passes.
 

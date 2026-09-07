@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { CopyButton } from "@/components/copy-button";
 import { GiftCardArt } from "@/components/gift-card-art";
 import { Spinner } from "@/components/icons";
+import { formatUsd } from "@/lib/config";
 import { PUBLIC_DEMO_AUTO_PAY } from "@/lib/public-flags";
 import type { PublicOrder } from "@/lib/order-view";
 
@@ -69,7 +70,7 @@ export default function CheckoutPage() {
         <div className="flex-1">
           <p className="font-black tracking-tight">{order.product.name}</p>
           <p className="font-mono text-xs uppercase tracking-[0.16em] text-muted">
-            ${order.product.usdValue} USD × {order.quantity}
+            {formatUsd(order.product.usdValue)} × {order.quantity}
           </p>
         </div>
         <p className="font-black text-green-hi">{order.amountLabel}</p>

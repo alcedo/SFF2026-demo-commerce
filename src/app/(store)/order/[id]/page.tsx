@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { CopyButton } from "@/components/copy-button";
 import { GiftCardArt } from "@/components/gift-card-art";
+import { formatUsd } from "@/lib/config";
 import type { PublicOrder } from "@/lib/order-view";
 
 export default function VoucherDisplayPage() {
@@ -56,7 +57,7 @@ export default function VoucherDisplayPage() {
         <div>
           <p className="font-black tracking-tight">{order.product.name}</p>
           <p className="font-mono text-xs uppercase tracking-[0.16em] text-muted">
-            ${order.product.usdValue} USD × {order.quantity}
+            {formatUsd(order.product.usdValue)} × {order.quantity}
           </p>
         </div>
       </div>

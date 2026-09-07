@@ -125,7 +125,7 @@ Proof standards:
 - Capture the action and the resulting screen (ARIA snapshot + screenshot). A final URL is not enough.
 - Confirm side effects in JSON: pending orders have `voucherCodes: []`; paid orders have one code per quantity; demo `txHash` is `0x` + sha256(`demo:${orderId}`).
 - Demo auto-pay skips the wallet. Prove the skip by watching checkout say you do not need to send USDC, then seeing pay without a tx from a wallet, then checking that `txHash` matches the demo digest — not by trusting the env name.
-- `npm run verify:purchase` is a useful HTTP smoke (3× Amazon = 75 USDC, codes hidden until paid). It is not a mapped UI proof.
+- `npm run verify:purchase` is a useful HTTP smoke (3× Amazon = 0.075 USDC, codes hidden until paid). It is not a mapped UI proof.
 
 Minimum files for a feature proof:
 

@@ -31,13 +31,15 @@ export type CatalogProduct = {
   redeemSteps: string[];
 };
 
+export const TESTNET_VALUE_SCALE = 0.001;
+
 export const CATALOG: CatalogProduct[] = [
   {
     slug: "amazon",
     brand: "Amazon",
     name: "Amazon Gift Card",
     category: "Shopping",
-    usdValue: 25,
+    usdValue: 25 * TESTNET_VALUE_SCALE,
     description:
       "Use this Amazon gift card to shop millions of products on Amazon. Delivered instantly after successful payment.",
     theme: "amazon",
@@ -54,7 +56,7 @@ export const CATALOG: CatalogProduct[] = [
     brand: "Netflix",
     name: "Netflix Gift Card",
     category: "Streaming",
-    usdValue: 15,
+    usdValue: 15 * TESTNET_VALUE_SCALE,
     description:
       "Watch TV shows and movies on Netflix. Delivered instantly after successful payment.",
     theme: "netflix",
@@ -71,7 +73,7 @@ export const CATALOG: CatalogProduct[] = [
     brand: "Steam",
     name: "Steam Gift Card",
     category: "Gaming",
-    usdValue: 20,
+    usdValue: 20 * TESTNET_VALUE_SCALE,
     description:
       "Add funds to your Steam Wallet and buy games instantly after payment.",
     theme: "steam",
@@ -88,7 +90,7 @@ export const CATALOG: CatalogProduct[] = [
     brand: "Spotify",
     name: "Spotify Gift Card",
     category: "Streaming",
-    usdValue: 10,
+    usdValue: 10 * TESTNET_VALUE_SCALE,
     description:
       "Credit for Spotify Premium. Delivered instantly after successful payment.",
     theme: "spotify",
@@ -105,7 +107,7 @@ export const CATALOG: CatalogProduct[] = [
     brand: "Google Play",
     name: "Google Play Gift Card",
     category: "Apps",
-    usdValue: 25,
+    usdValue: 25 * TESTNET_VALUE_SCALE,
     description:
       "Spend on apps, games, and more in Google Play. Delivered instantly after payment.",
     theme: "google",
@@ -122,7 +124,7 @@ export const CATALOG: CatalogProduct[] = [
     brand: "Apple",
     name: "App Store Gift Card",
     category: "Apps",
-    usdValue: 25,
+    usdValue: 25 * TESTNET_VALUE_SCALE,
     description:
       "Use this App Store & iTunes credit on Apple services and apps.",
     theme: "apple",
@@ -139,7 +141,7 @@ export const CATALOG: CatalogProduct[] = [
     brand: "Xbox",
     name: "Xbox Gift Card",
     category: "Gaming",
-    usdValue: 15,
+    usdValue: 15 * TESTNET_VALUE_SCALE,
     description:
       "Add Microsoft account credit for games and Xbox subscriptions.",
     theme: "xbox",
@@ -156,7 +158,7 @@ export const CATALOG: CatalogProduct[] = [
     brand: "Grab",
     name: "Grab Gift Card",
     category: "Delivery",
-    usdValue: 10,
+    usdValue: 10 * TESTNET_VALUE_SCALE,
     description:
       "Use Grab credits for rides and food delivery. Delivered instantly after payment.",
     theme: "grab",
@@ -173,7 +175,7 @@ export const CATALOG: CatalogProduct[] = [
     brand: "Shopee",
     name: "Shopee Gift Card",
     category: "Shopping",
-    usdValue: 20,
+    usdValue: 20 * TESTNET_VALUE_SCALE,
     description:
       "Shop on Shopee with this digital voucher. Delivered instantly after payment.",
     theme: "shopee",

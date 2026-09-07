@@ -33,9 +33,9 @@ Preconditions:
 - **Clear search.** Clear that field. Amazon returns.
 - **Category.** Set the category `<select>` to `Gaming`. The grid includes `Steam Gift Card` and `Xbox Gift Card` and does not include `Amazon Gift Card`.
 - **Reset category.** Set the `<select>` to `All Categories`. Amazon returns.
-- **Product from card.** On the Amazon card, choose `Buy now`. The product heading is `Amazon Gift Card`, the price line is `25 USDC`, and a button matching `Buy now · 25 USDC` is enabled.
-- **Product from URL.** Open `$URL/vouchers/steam`. The heading is `Steam Gift Card` and the button matches `Buy now · 20 USDC`.
-- **HTTP list.** Run `control-vouchershop http GET /api/products --out $EVIDENCE/catalog/products.json`. The JSON includes `amazon` at `priceUsdc` 25 and `available` ≥ 1.
+- **Product from card.** On the Amazon card, choose `Buy now`. The product heading is `Amazon Gift Card`, the price line is `0.025 USDC`, and a button matching `Buy now · 0.025 USDC` is enabled.
+- **Product from URL.** Open `$URL/vouchers/steam`. The heading is `Steam Gift Card` and the button matches `Buy now · 0.02 USDC`.
+- **HTTP list.** Run `control-vouchershop http GET /api/products --out $EVIDENCE/catalog/products.json`. The JSON includes `amazon` at `priceUsdc` 0.025 and `available` ≥ 1.
 - **Proof.** On `/vouchers` with search empty and category `All Categories`, capture `$EVIDENCE/catalog/grid.aria.txt` and `$EVIDENCE/catalog/grid.png`. Both show AgentiX and `All digital vouchers` plus at least Amazon, Netflix, and Steam.
 
 ## Gotchas

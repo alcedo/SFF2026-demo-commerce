@@ -36,11 +36,21 @@ export function fromMicroUsdc(micro: number | bigint): number {
 }
 
 export function formatUsdc(micro: number | bigint): string {
-  return fromMicroUsdc(micro).toFixed(2);
+  const value = BigInt(micro);
+  const zero = BigInt(0);
+  const sign = value < zero ? "-" : "";
+  const abs = value < zero ? -value : value;
+  const base = BigInt(10) ** BigInt(USDC_DECIMALS);
+  const whole = abs / base;
+  const frac = (abs % base)
+    .toString()
+    .padStart(USDC_DECIMALS, "0")
+    .replace(/0+$/, "");
+  return frac.length === 0 ? `${sign}${whole}` : `${sign}${whole}.${frac}`;
 }
 
 export function formatUsd(value: number): string {
-  return `$${value} USD`;
+  return `$${formatUsdc(toMicroUsdc(value))} USD`;
 }
 
 export function truncateHex(value: string, head = 6, tail = 4): string {

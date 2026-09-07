@@ -31,7 +31,7 @@ Preconditions:
 - **Bad password.** Fill `input[autocomplete="username"]` with `admin` and `input[autocomplete="current-password"]` with `wrong`. Choose `Login`. A `Invalid username or password` error stays on the login page.
 - **Good login.** Fill username `admin`, password `admin123`. Choose `Login`. The heading is `Dashboard`. Cards `Total Vouchers`, `Available`, `Used`, and `Expired` are visible. Used is at least 1 (seeded Amazon used code). Expired is at least 1 (seeded Netflix expired code).
 - **Settings.** Choose `Settings`. `Demo auto-detect` is `On`. `Admin username` is `admin`. `Network` is `Sepolia`.
-- **Add stock.** Choose `Vouchers`. Heading is `Manage vouchers`. Choose `+ Add voucher`. In the dialog heading `Add voucher`, keep product `Amazon Gift Card (25 USDC)`, type `VERIFY-<run-id>-AMZ` into `Codes (one per line)`, choose `Add`. The page shows `Added 1 voucher(s).` and the table contains that code with status `available`.
+- **Add stock.** Choose `Vouchers`. Heading is `Manage vouchers`. Choose `+ Add voucher`. In the dialog heading `Add voucher`, keep product `Amazon Gift Card (0.025 USDC)`, type `VERIFY-<run-id>-AMZ` into `Codes (one per line)`, choose `Add`. The page shows `Added 1 voucher(s).` and the table contains that code with status `available`.
 - **Filter.** Set status to `available`, type `VERIFY-<run-id>-AMZ` into `Search codes`, choose `Filter`. The table includes that code and does not include the seeded `used` Amazon code.
 - **Usage.** Choose `Usage History`. Choose `View` on the `VERIFY-<run-id>-AMZ` row. Heading is `Voucher usage`. Status is `available`.
 - **Logout.** Choose `Logout`. The login heading returns. `/admin` redirects to login again.

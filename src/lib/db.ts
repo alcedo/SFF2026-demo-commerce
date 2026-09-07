@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { CATALOG } from "./catalog";
-import { DEMO_AUTO_PAY, DEMO_AUTO_PAY_MS, ORDER_TTL_MS, toMicroUsdc } from "./config";
+import { DEMO_AUTO_PAY, DEMO_AUTO_PAY_MS, ORDER_TTL_MS, fromMicroUsdc, toMicroUsdc } from "./config";
 import {
   allocateHdIndex,
   heldDerivationIndices,
@@ -93,7 +93,7 @@ function seedState(): ShopState {
     name: item.name,
     description: item.description,
     category: item.category,
-    usd_value: item.usdValue,
+    usd_value: fromMicroUsdc(toMicroUsdc(item.usdValue)),
     price_micro: Number(toMicroUsdc(item.usdValue)),
     theme: item.theme,
     active: 1,
@@ -173,10 +173,23 @@ function tryWriteSnapshot(state: ShopState): boolean {
   }
 }
 
+function applyCatalogPrices(state: ShopState) {
+  for (const product of state.products) {
+    const item = CATALOG.find((entry) => entry.slug === product.slug);
+    if (!item) continue;
+    product.usd_value = fromMicroUsdc(toMicroUsdc(item.usdValue));
+    product.price_micro = Number(toMicroUsdc(item.usdValue));
+  }
+}
+
 function loadState(): ShopState {
-  if (globalForShop.__voucherShop) return globalForShop.__voucherShop;
+  if (globalForShop.__voucherShop) {
+    applyCatalogPrices(globalForShop.__voucherShop);
+    return globalForShop.__voucherShop;
+  }
   const snapshot = tryReadSnapshot();
   if (snapshot) {
+    applyCatalogPrices(snapshot);
     globalForShop.__voucherShop = snapshot;
     return snapshot;
   }
