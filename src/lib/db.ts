@@ -415,6 +415,18 @@ export function expireOrder(orderId: string): boolean {
   return expired;
 }
 
+/** TTL sweep only: free reserved stock and HD indexes. Does not scan chain. */
+export function expireAgedInvoices(now = Date.now()): number {
+  const agedIds = listPendingOrders()
+    .filter((order) => isInvoiceAged(order, now))
+    .map((order) => order.id);
+  let expired = 0;
+  for (const id of agedIds) {
+    if (expireOrder(id)) expired += 1;
+  }
+  return expired;
+}
+
 export function getOrder(id: string): Order | undefined {
   const stored = loadState().orders.find((order) => order.id === id);
   const order = stored ?? synthesizeOrder(id);

@@ -12,7 +12,6 @@ import {
   getOrder,
   isInvoiceAged,
   isTxHashUsed,
-  listPendingOrders,
   setOrderTxHash,
   type Order,
 } from "./db";
@@ -108,13 +107,6 @@ export async function findIncomingUsdcTransfer(input: {
     return matchUnusedTransfer(mapped, input.expectedAmountMicro, used);
   } catch {
     return null;
-  }
-}
-
-export async function reconcileAgedInvoices(): Promise<void> {
-  for (const order of listPendingOrders()) {
-    if (!isInvoiceAged(order)) continue;
-    await detectAndFulfill(order);
   }
 }
 
