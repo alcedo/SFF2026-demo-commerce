@@ -22,7 +22,7 @@ import { matchUnusedTransfer } from "./usdc-transfer";
 
 const publicClient = createPublicClient({
   chain: CHAIN,
-  transport: http(RPC_URL),
+  transport: http(RPC_URL, { timeout: 8_000 }),
 });
 
 const transferEvent = parseAbiItem(
@@ -127,13 +127,15 @@ export async function reconcileAgedInvoices(): Promise<void> {
 export async function detectAndFulfill(order: Order): Promise<Order> {
   if (order.status === "paid" || order.status === "expired") return order;
 
-  const onchain = await findIncomingUsdcTransfer({
-    expectedAmountMicro: BigInt(order.amount_micro),
-    depositAddress: orderDepositAddress(order.derivation_index),
-  });
-  if (onchain) {
-    if (await setOrderTxHash(order.id, onchain)) await fulfillOrder(order.id);
-    return (await getOrder(order.id))!;
+  if (!DEMO_AUTO_PAY) {
+    const onchain = await findIncomingUsdcTransfer({
+      expectedAmountMicro: BigInt(order.amount_micro),
+      depositAddress: orderDepositAddress(order.derivation_index),
+    });
+    if (onchain) {
+      if (await setOrderTxHash(order.id, onchain)) await fulfillOrder(order.id);
+      return (await getOrder(order.id))!;
+    }
   }
 
   if (DEMO_AUTO_PAY) {
