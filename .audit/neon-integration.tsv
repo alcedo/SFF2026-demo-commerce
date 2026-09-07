@@ -15,3 +15,6 @@ ts	phase	decision	why	evidence	result
 2026-09-07T11:21:03Z	verify	Browser Amazon demo buy on Neon: pending hid codes, success revealed D13C-63D0-5DD6-BBA8	http://127.0.0.1:4174/order/amazon.1.1788780042357.2.717bf313e9fe22af	VERIFIED ui
 2026-09-07T11:23:08Z	verify	Admin on Neon: login gate, add VERIFY-NEON-SQL-5893-AMZ, filter, usage id 111 available	stock shared: seed 12, -2 script, -3 http, -1 browser, +1 admin = 7	VERIFIED admin
 2026-09-07T11:23:43Z	vercel	Marketplace DATABASE_URL still unreadable; Preview SSO health unknown	Connect Neon to Preview/Production in Vercel; then /api/health/db should be store neon	blocked-env
+2026-09-07T12:47:00Z	vercel	MCP sees prj_oRNhz7Miyt4liWogiqRegTYFJ0eY sff-2026-demo-commerce on verceluser3	list_projects get_project after reconnect	ok
+2026-09-07T12:52:14Z	vercel	Production is main 6e2cff4; GET /api/health/db is 404; Neon shop code is not on that deploy	https://sff-2026-demo-commerce.vercel.app/api/health/db	blocked-code
+2026-09-07T12:52:30Z	vercel	User connected Neon to the new project; trigger Preview of cursor/neon-postgres-5893 to test store=neon	PR 11 vs production main	open
