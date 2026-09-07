@@ -29,7 +29,7 @@ Preconditions:
 - **Create order.** Choose `Buy now · 0.025 USDC`. The button may read `Creating order...`. The next heading is `Complete your purchase`. The URL is `/checkout/<orderId>` where `<orderId>` matches `amazon.1.<digits>.<hex>`.
 - **Pending leak check.** Before eight seconds pass, run `control-vouchershop http GET /api/orders/<orderId> --out $EVIDENCE/demo-purchase/pending.json`. `status` is `pending` and `voucherCodes` is `[]`.
 - **Demo copy.** Checkout says `This playground confirms the order in about eight seconds. You do not need to send USDC.` and `Waiting for the demo confirm...`. Do not send a token.
-- **Auto confirm.** Stay on checkout (it polls every 2s) or run `control-vouchershop wait-paid --order-id '<orderId>'`. After about eight seconds the app moves to `/processing/<orderId>` (`Detecting your payment...`) and then `/success/<orderId>`.
+- **Auto confirm.** Stay on checkout. The page reloads every 2.5s and the server confirms demo pay after about eight seconds. Then `/processing/<orderId>` (`Detecting your payment...`) and `/success/<orderId>`.
 - **Receipt.** Success heading is `Payment successful`. Status text includes `Confirmed (3/3)`. Transaction Hash is a truncated `0x…` value. Amount is `0.025 USDC`. Network is `Sepolia`.
 - **Demo digest.** On the paid JSON, `txHash` equals `0x` plus sha256 of the ascii string `demo:<orderId>` (hex). That is the skip: no wallet broadcast.
 - **Reveal.** Choose `View my voucher`. The banner reads `Your vouchers are ready.` and a row `Voucher #1` shows a `XXXX-XXXX-XXXX-XXXX` code. `GET /api/orders/<orderId>` now has `status: "paid"` and `voucherCodes.length === 1`.

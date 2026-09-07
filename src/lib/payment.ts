@@ -3,6 +3,7 @@ import {
   CHAIN,
   DEMO_AUTO_PAY,
   DEMO_AUTO_PAY_MS,
+  ORDER_TTL_MS,
   RPC_URL,
   USDC_ADDRESS,
 } from "./config";
@@ -88,7 +89,7 @@ export async function findIncomingUsdcTransfer(input: {
 }): Promise<`0x${string}` | null> {
   try {
     const latest = await publicClient.getBlockNumber();
-    const lookback = BigInt(80);
+    const lookback = BigInt(Math.max(80, Math.ceil(ORDER_TTL_MS / 12_000) + 40));
     const fromBlock = latest > lookback ? latest - lookback : BigInt(0);
     const logs = await publicClient.getLogs({
       address: USDC_ADDRESS,
