@@ -10,6 +10,7 @@ import {
   getOrder,
   isInvoiceAged,
   isTxHashUsed,
+  orderCreatedMs,
   type Order,
 } from "./db";
 import { orderDepositAddress } from "./order-deposit";
@@ -151,11 +152,7 @@ export async function detectAndFulfill(order: Order): Promise<Order> {
   if (order.status === "expired") return order;
 
   if (DEMO_AUTO_PAY) {
-    const createdMs = Date.now() - Date.parse(
-      order.created_at.includes("T")
-        ? order.created_at
-        : `${order.created_at.replace(" ", "T")}Z`
-    );
+    const createdMs = Date.now() - orderCreatedMs(order);
     if (Number.isFinite(createdMs) && createdMs >= DEMO_AUTO_PAY_MS) {
       await applyVerifiedPayment(order.id, demoTxHash(order.id));
       return (await getOrder(order.id))!;
