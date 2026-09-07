@@ -13,8 +13,8 @@ export default async function ManageVouchersPage({
   const params = await searchParams;
   const status = params.status ?? "all";
   const query = params.q ?? "";
-  const vouchers = listVouchers({ status, query });
-  const products = listAllProducts().map(toPublicProduct);
+  const vouchers = await listVouchers({ status, query });
+  const products = await Promise.all((await listAllProducts()).map(toPublicProduct));
 
   return (
     <div>

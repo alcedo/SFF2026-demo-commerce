@@ -8,10 +8,10 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const order = getOrder(id);
+  const order = await getOrder(id);
   if (!order) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
   const updated = await detectAndFulfill(order);
-  return NextResponse.json({ order: toPublicOrder(updated) });
+  return NextResponse.json({ order: await toPublicOrder(updated) });
 }

@@ -2,8 +2,8 @@ import Link from "next/link";
 import { listVouchers } from "@/lib/db";
 import { StatusPill } from "@/components/status-pill";
 
-export default function UsageHistoryPage() {
-  const rows = listVouchers();
+export default async function UsageHistoryPage() {
+  const rows = await listVouchers();
   return (
     <div>
       <p className="kicker">Ledger</p>

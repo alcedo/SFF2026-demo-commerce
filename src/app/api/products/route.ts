@@ -4,6 +4,6 @@ import { toPublicProduct } from "@/lib/order-view";
 
 export async function GET() {
   return NextResponse.json({
-    products: listProducts().map(toPublicProduct),
+    products: await Promise.all((await listProducts()).map(toPublicProduct)),
   });
 }

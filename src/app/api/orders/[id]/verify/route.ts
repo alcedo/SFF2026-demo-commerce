@@ -12,13 +12,13 @@ export async function POST(
   const body = (await request.json()) as Record<string, unknown>;
   const txHash = body.txHash as `0x${string}` | undefined;
 
-  const order = getOrder(id);
+  const order = await getOrder(id);
   if (!order) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
 
   if (order.status === "paid") {
-    return NextResponse.json({ order: toPublicOrder(order) });
+    return NextResponse.json({ order: await toPublicOrder(order) });
   }
 
   if (order.status === "expired") {
@@ -40,9 +40,9 @@ export async function POST(
     return NextResponse.json({ error: verification.error }, { status: 400 });
   }
 
-  if (!setOrderTxHash(id, txHash)) {
+  if (!(await setOrderTxHash(id, txHash))) {
     return NextResponse.json({ error: "Transaction already used" }, { status: 409 });
   }
-  fulfillOrder(id);
-  return NextResponse.json({ order: toPublicOrder(getOrder(id)!) });
+  await fulfillOrder(id);
+  return NextResponse.json({ order: await toPublicOrder((await getOrder(id))!) });
 }

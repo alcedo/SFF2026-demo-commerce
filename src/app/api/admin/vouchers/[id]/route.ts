@@ -10,7 +10,7 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
-  const voucher = getVoucherById(Number(id));
+  const voucher = await getVoucherById(Number(id));
   if (!voucher) {
     return NextResponse.json({ error: "Voucher not found" }, { status: 404 });
   }

@@ -32,8 +32,8 @@ const features = [
   },
 ];
 
-export default function HomePage() {
-  const products = listProducts().map(toPublicProduct);
+export default async function HomePage() {
+  const products = await Promise.all((await listProducts()).map(toPublicProduct));
   const popular = products.filter((product) =>
     POPULAR_SLUGS.includes(product.slug as (typeof POPULAR_SLUGS)[number])
   );

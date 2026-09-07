@@ -2,8 +2,8 @@ import { listProducts } from "@/lib/db";
 import { toPublicProduct } from "@/lib/order-view";
 import { VoucherGrid } from "./voucher-grid";
 
-export default function VouchersPage() {
-  const products = listProducts().map(toPublicProduct);
+export default async function VouchersPage() {
+  const products = await Promise.all((await listProducts()).map(toPublicProduct));
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
       <p className="kicker">Build zone</p>

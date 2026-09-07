@@ -8,7 +8,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const order = getOrder(id);
+  const order = await getOrder(id);
   if (!order) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
@@ -22,10 +22,10 @@ export async function POST(
     return NextResponse.json({ error: "Order already paid" }, { status: 409 });
   }
 
-  expireOrder(id);
-  const expired = getOrder(id);
+  await expireOrder(id);
+  const expired = await getOrder(id);
   if (!expired) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
-  return NextResponse.json({ order: toPublicOrder(expired) });
+  return NextResponse.json({ order: await toPublicOrder(expired) });
 }

@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
   const status = request.nextUrl.searchParams.get("status") ?? "all";
   const query = request.nextUrl.searchParams.get("q") ?? "";
   return NextResponse.json({
-    products: listAllProducts().map(toPublicProduct),
-    vouchers: listVouchers({ status, query }),
+    products: await Promise.all((await listAllProducts()).map(toPublicProduct)),
+    vouchers: await listVouchers({ status, query }),
   });
 }
 
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    addVouchers(productId, codeList);
+    await addVouchers(productId, codeList);
     return NextResponse.json({ added: codeList.length });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to add vouchers";

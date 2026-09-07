@@ -28,7 +28,7 @@ Funds stay on the derived address until you sweep them to the treasury `MERCHANT
 
 On-chain checks still run through `src/lib/payment.ts` and `POST /api/orders/[id]/verify`.
 
-Orders use a signed id (`slug.qty.timestamp.index.hmac`) so a Vercel isolate can reconstruct the HD index without a shared database.
+Orders use a signed id (`slug.qty.timestamp.index.hmac`). When `DATABASE_URL` is set (Vercel Marketplace Neon), products, orders, and voucher stock live in Postgres so every isolate sees the same reservations. Without `DATABASE_URL`, the app keeps a JSON snapshot (`data/vouchershop.json` locally, `/tmp` on Vercel) and can rebuild a pending invoice from the signed id.
 
 ## Routes
 

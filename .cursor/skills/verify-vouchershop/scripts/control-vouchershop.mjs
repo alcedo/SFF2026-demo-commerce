@@ -223,6 +223,11 @@ function writeDemoEnv(appDir, url) {
     "MERCHANT_ADDRESS=0x006450335E618A9Fae2ad89542af411C8668d87D",
     "SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com",
     "NEXT_PUBLIC_SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com",
+    "DATABASE_URL=",
+    "POSTGRES_URL=",
+    "DATABASE_URL_UNPOOLED=",
+    "POSTGRES_URL_NON_POOLING=",
+    "POSTGRES_PRISMA_URL=",
     "",
   ].join("\n");
   writeFileSync(path.join(appDir, ".env.local"), body);
@@ -273,6 +278,11 @@ async function cmdLaunch(flags) {
         ...process.env,
         PORT: String(port),
         APP_URL: url,
+        DATABASE_URL: "",
+        POSTGRES_URL: "",
+        DATABASE_URL_UNPOOLED: "",
+        POSTGRES_URL_NON_POOLING: "",
+        POSTGRES_PRISMA_URL: "",
       },
     }
   );

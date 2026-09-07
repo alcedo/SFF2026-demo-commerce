@@ -3,9 +3,9 @@ import { StatusPill } from "@/components/status-pill";
 import { formatDateTime } from "@/lib/config";
 import { listRecentActivity, voucherStats } from "@/lib/db";
 
-export default function AdminDashboardPage() {
-  const stats = voucherStats();
-  const recent = listRecentActivity();
+export default async function AdminDashboardPage() {
+  const stats = await voucherStats();
+  const recent = await listRecentActivity();
   const cards = [
     { label: "Total Vouchers", value: stats.total, className: "text-green-hi" },
     { label: "Available", value: stats.available, className: "text-green" },
