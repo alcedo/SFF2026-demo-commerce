@@ -16,7 +16,10 @@ export function CheckoutView({ order }: { order: PublicOrder }) {
 
   useEffect(() => {
     let active = true;
+    let inflight = false;
     async function poll() {
+      if (inflight) return;
+      inflight = true;
       try {
         const res = await fetch(`/api/orders/${order.id}`, { method: "POST" });
         const data = (await res.json()) as { order?: PublicOrder };
@@ -26,12 +29,14 @@ export function CheckoutView({ order }: { order: PublicOrder }) {
         }
       } catch {
         return;
+      } finally {
+        inflight = false;
       }
     }
     void poll();
     const timer = window.setInterval(() => {
       void poll();
-    }, 2500);
+    }, 4000);
     return () => {
       active = false;
       window.clearInterval(timer);

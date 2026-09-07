@@ -1,4 +1,4 @@
-import { createPublicClient, http, parseAbiItem } from "viem";
+import { createPublicClient, fallback, http, parseAbiItem } from "viem";
 import {
   CHAIN,
   DEMO_AUTO_PAY,
@@ -21,9 +21,19 @@ import { orderDepositAddress } from "./order-deposit";
 import { demoTxHash } from "./order-token";
 import { matchUnusedTransfer } from "./usdc-transfer";
 
+const RPC_URLS = [
+  ...new Set([
+    RPC_URL,
+    "https://ethereum-sepolia-rpc.publicnode.com",
+    "https://1rpc.io/sepolia",
+  ]),
+];
+
 const publicClient = createPublicClient({
   chain: CHAIN,
-  transport: http(RPC_URL, { timeout: 8_000 }),
+  transport: fallback(
+    RPC_URLS.map((url) => http(url, { timeout: 8_000, retryCount: 1 }))
+  ),
 });
 
 const transferEvent = parseAbiItem(
@@ -37,10 +47,13 @@ export async function verifyUsdcPayment(input: {
   buyerAddress?: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
-    const receipt = await publicClient.waitForTransactionReceipt({
-      hash: input.txHash,
-      confirmations: 1,
-    });
+    const receipt =
+      (await publicClient.getTransactionReceipt({ hash: input.txHash }).catch(() => null)) ??
+      (await publicClient.waitForTransactionReceipt({
+        hash: input.txHash,
+        confirmations: 1,
+        timeout: 12_000,
+      }));
 
     if (receipt.status !== "success") {
       return { ok: false, error: "Transaction failed on chain" };
@@ -91,13 +104,21 @@ export async function findIncomingUsdcTransfer(input: {
     const latest = await publicClient.getBlockNumber();
     const lookback = BigInt(Math.max(80, Math.ceil(ORDER_TTL_MS / 12_000) + 40));
     const fromBlock = latest > lookback ? latest - lookback : BigInt(0);
-    const logs = await publicClient.getLogs({
-      address: USDC_ADDRESS,
-      event: transferEvent,
-      args: { to: input.depositAddress },
-      fromBlock,
-      toBlock: latest,
-    });
+    const chunk = BigInt(30);
+    const logs = [];
+    for (let toBlock = latest; toBlock >= fromBlock; ) {
+      const start = toBlock >= fromBlock + chunk ? toBlock - chunk + BigInt(1) : fromBlock;
+      const batch = await publicClient.getLogs({
+        address: USDC_ADDRESS,
+        event: transferEvent,
+        args: { to: input.depositAddress },
+        fromBlock: start,
+        toBlock,
+      });
+      logs.push(...batch);
+      if (start === fromBlock) break;
+      toBlock = start - BigInt(1);
+    }
     const mapped = logs.flatMap((log) =>
       log.args.value === undefined
         ? []
