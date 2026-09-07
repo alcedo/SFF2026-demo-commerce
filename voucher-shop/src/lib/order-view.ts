@@ -41,7 +41,7 @@ export function toPublicProduct(product: Product): PublicProduct {
     name: product.name,
     description: product.description,
     category: product.category,
-    usdValue: product.usd_value,
+    usdValue: fromMicroUsdc(product.price_micro),
     priceUsdc: fromMicroUsdc(product.price_micro),
     theme: product.theme,
     available: countAvailable(product.id),

@@ -1,4 +1,5 @@
 import type { CardTheme } from "@/lib/catalog";
+import { formatUsdc, toMicroUsdc } from "@/lib/config";
 
 const themes: Record<
   CardTheme,
@@ -39,7 +40,7 @@ export function GiftCardArt({
           Gift Card
         </div>
         <div className="text-lg font-black tracking-tight">{style.mark}</div>
-        <div className="text-2xl font-black">${usdValue}</div>
+        <div className="text-2xl font-black">${formatUsdc(toMicroUsdc(usdValue))}</div>
       </div>
     </div>
   );

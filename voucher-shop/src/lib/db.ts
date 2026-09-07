@@ -3,7 +3,7 @@ import { createHash } from "crypto";
 import fs from "fs";
 import path from "path";
 import { CATALOG } from "./catalog";
-import { toMicroUsdc } from "./config";
+import { fromMicroUsdc, toMicroUsdc } from "./config";
 
 const dataDir = path.join(process.cwd(), "data");
 if (!fs.existsSync(dataDir)) {
@@ -11,7 +11,7 @@ if (!fs.existsSync(dataDir)) {
 }
 
 const dbPath = path.join(dataDir, "vouchers.db");
-const SCHEMA_VERSION = "2";
+const SCHEMA_VERSION = "3";
 
 const globalForDb = globalThis as typeof globalThis & {
   __voucherDb?: Database.Database;
@@ -99,7 +99,7 @@ function createDb() {
       name TEXT NOT NULL,
       description TEXT NOT NULL,
       category TEXT NOT NULL,
-      usd_value INTEGER NOT NULL,
+      usd_value REAL NOT NULL,
       price_micro INTEGER NOT NULL,
       theme TEXT NOT NULL,
       active INTEGER NOT NULL DEFAULT 1,
@@ -158,7 +158,7 @@ function createDb() {
           item.name,
           item.description,
           item.category,
-          item.usdValue,
+          fromMicroUsdc(toMicroUsdc(item.usdValue)),
           Number(toMicroUsdc(item.usdValue)),
           item.theme
         );

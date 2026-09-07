@@ -64,7 +64,7 @@ export default function CheckoutPage() {
 
       <div className="mt-8">
         <p className="font-medium">
-          1. Send {order.amountUsdc.toFixed(2)} USDC to the address below (Use Sepolia testnet)
+          1. Send {order.amountLabel} to the address below (Use Sepolia testnet)
         </p>
         <div className="panel mt-3 flex items-center gap-2 px-3 py-3 font-mono text-xs sm:text-sm">
           <span className="flex-1 break-all text-paper">{order.merchantAddress}</span>

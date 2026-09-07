@@ -2,7 +2,7 @@ import Link from "next/link";
 import { GiftCardArt } from "@/components/gift-card-art";
 import { IconBolt, IconClock, IconShield } from "@/components/icons";
 import { VoucherCard } from "@/components/voucher-card";
-import { POPULAR_SLUGS } from "@/lib/catalog";
+import { catalogBySlug, POPULAR_SLUGS } from "@/lib/catalog";
 import { listProducts } from "@/lib/db";
 import { toPublicProduct } from "@/lib/order-view";
 
@@ -79,10 +79,18 @@ export default function HomePage() {
           </div>
           <div className="relative mx-auto h-72 w-full max-w-sm">
             <div className="absolute left-6 top-4 w-56 rotate-[-8deg] shadow-[0_0_40px_rgba(0,211,126,0.18)]">
-              <GiftCardArt theme="amazon" usdValue={25} className="h-36" />
+              <GiftCardArt
+                theme="amazon"
+                usdValue={catalogBySlug("amazon")!.usdValue}
+                className="h-36"
+              />
             </div>
             <div className="absolute right-2 top-16 w-56 rotate-[10deg] shadow-[0_0_40px_rgba(0,255,153,0.12)]">
-              <GiftCardArt theme="netflix" usdValue={15} className="h-36" />
+              <GiftCardArt
+                theme="netflix"
+                usdValue={catalogBySlug("netflix")!.usdValue}
+                className="h-36"
+              />
             </div>
             <div className="absolute bottom-2 left-14 flex h-16 w-16 items-center justify-center bg-green font-mono text-xl font-bold text-ink notch-md">
               $
