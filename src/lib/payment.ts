@@ -15,6 +15,7 @@ import {
   type Order,
 } from "./db";
 import { demoTxHash } from "./order-token";
+import { matchUnusedTransfer } from "./payable-amount";
 
 const publicClient = createPublicClient({
   chain: CHAIN,
@@ -91,12 +92,15 @@ export async function findIncomingUsdcTransfer(input: {
       fromBlock,
       toBlock: latest,
     });
-    const match = [...logs].reverse().find((log) => {
-      if (log.args.value !== input.expectedAmountMicro) return false;
-      if (isTxHashUsed(log.transactionHash)) return false;
-      return true;
-    });
-    return match?.transactionHash ?? null;
+    const mapped = logs.flatMap((log) =>
+      log.args.value === undefined
+        ? []
+        : [{ value: log.args.value, tx: log.transactionHash }]
+    );
+    const used = new Set(
+      mapped.filter((log) => isTxHashUsed(log.tx)).map((log) => log.tx)
+    );
+    return matchUnusedTransfer(mapped, input.expectedAmountMicro, used);
   } catch {
     return null;
   }

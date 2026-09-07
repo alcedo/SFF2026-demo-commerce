@@ -60,7 +60,7 @@ export default function CheckoutPage() {
             ${order.product.usdValue} USD × {order.quantity}
           </p>
         </div>
-        <p className="font-black text-green-hi">{order.amountUsdc} USDC</p>
+        <p className="font-black text-green-hi">{order.amountLabel}</p>
       </div>
 
       <div className="mt-8">
@@ -70,19 +70,28 @@ export default function CheckoutPage() {
               This playground confirms the order in about eight seconds. You do not need to send USDC.
             </p>
             <p className="mt-4 text-sm text-muted">
-              Optional. Send {order.amountUsdc.toFixed(2)} USDC on Sepolia to{" "}
-              {order.merchantAddress} if you want to exercise the real rail.
+              Optional. Send exactly {order.amountLabel} on Sepolia to{" "}
+              {order.merchantAddress} if you want to exercise the real rail. The last
+              digits mark this order.
             </p>
           </>
         ) : (
           <>
             <p className="font-medium">
-              1. Send {order.amountUsdc.toFixed(2)} USDC to the address below (Use Sepolia testnet)
+              1. Send exactly {order.amountLabel} to the address below (Sepolia testnet)
             </p>
+            <div className="panel mt-3 flex items-center gap-2 px-3 py-3 font-mono text-xs sm:text-sm">
+              <span className="flex-1 break-all text-paper">{order.amountExact}</span>
+              <CopyButton value={order.amountExact} label="Amount" />
+            </div>
             <div className="panel mt-3 flex items-center gap-2 px-3 py-3 font-mono text-xs sm:text-sm">
               <span className="flex-1 break-all text-paper">{order.merchantAddress}</span>
               <CopyButton value={order.merchantAddress} />
             </div>
+            <p className="mt-4 text-sm text-muted">
+              The last digits of the amount identify this order. Another {order.product.priceUsdc} USDC
+              payment will not unlock these codes.
+            </p>
             <p className="mt-6">2. We detect your payment automatically. This usually takes 10-30 seconds.</p>
           </>
         )}

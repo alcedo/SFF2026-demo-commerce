@@ -35,7 +35,7 @@ export function fromMicroUsdc(micro: number | bigint): number {
 }
 
 export function formatUsdc(micro: number | bigint): string {
-  return fromMicroUsdc(micro).toFixed(2);
+  return fromMicroUsdc(micro).toFixed(USDC_DECIMALS);
 }
 
 export function formatUsd(value: number): string {

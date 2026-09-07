@@ -48,7 +48,7 @@ export default function SuccessPage() {
           value={order.txHash ? truncateHex(order.txHash, 5, 4) : "—"}
           copy={order.txHash ?? undefined}
         />
-        <Row label="Amount" value={`${order.amountUsdc.toFixed(2)} USDC`} />
+        <Row label="Amount" value={order.amountLabel} />
         <Row label="Network" value={NETWORK_NAME} />
         <Row label="Date" value={formatDateTime(order.paidAt ?? order.createdAt)} />
         <div className="flex items-center justify-between py-2">

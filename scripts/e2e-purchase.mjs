@@ -53,7 +53,7 @@ async function main() {
   const order = orderData.order;
   console.log("Order created:", order.id);
 
-  const amount = parseUnits(String(order.amountUsdc), 6);
+  const amount = BigInt(order.amountMicro ?? Math.round(order.amountUsdc * 1e6));
   const balance = await publicClient.readContract({
     address: USDC,
     abi: erc20Abi,

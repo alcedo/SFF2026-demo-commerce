@@ -8,6 +8,7 @@ import {
   parseOrderToken,
   voucherCode,
 } from "./order-token";
+import { newPayTag, payableAmountMicro } from "./payable-amount";
 
 export type Product = {
   id: number;
@@ -247,7 +248,10 @@ function synthesizeOrder(id: string): Order | undefined {
     product_id: product.id,
     quantity: claims.quantity,
     buyer_address: null,
-    amount_micro: product.price_micro * claims.quantity,
+    amount_micro: payableAmountMicro(
+      product.price_micro * claims.quantity,
+      claims.payTag
+    ),
     tx_hash: null,
     status: "pending",
     created_at,
@@ -316,14 +320,7 @@ export function createOrder(input: {
   }
 
   const createdAtMs = Date.now();
-  const id =
-    input.id ??
-    issueOrderToken({
-      slug: product.slug,
-      quantity,
-      createdAtMs,
-    });
-
+  const baseMicro = product.price_micro * quantity;
   let created: Order | undefined;
   mutate((state) => {
     const available = state.vouchers.filter(
@@ -333,12 +330,41 @@ export function createOrder(input: {
     if (available.length < quantity) {
       throw new Error("Not enough vouchers in stock");
     }
+    const taken = new Set(
+      state.orders
+        .filter((order) => order.status === "pending")
+        .map((order) => order.amount_micro)
+    );
+    let payTag: number;
+    if (input.id) {
+      const claims = parseOrderToken(input.id);
+      if (!claims) throw new Error("Invalid order id");
+      payTag = claims.payTag;
+    } else {
+      payTag = newPayTag();
+      for (let attempt = 0; attempt < 32; attempt += 1) {
+        if (!taken.has(payableAmountMicro(baseMicro, payTag))) break;
+        payTag = newPayTag();
+      }
+    }
+    const amountMicro = payableAmountMicro(baseMicro, payTag);
+    if (!input.id && taken.has(amountMicro)) {
+      throw new Error("Could not allocate a unique payable amount");
+    }
+    const id =
+      input.id ??
+      issueOrderToken({
+        slug: product.slug,
+        quantity,
+        createdAtMs,
+        payTag,
+      });
     const order: Order = {
       id,
       product_id: input.productId,
       quantity,
       buyer_address: input.buyerAddress ?? null,
-      amount_micro: product.price_micro * quantity,
+      amount_micro: amountMicro,
       tx_hash: null,
       status: "pending",
       created_at: new Date(createdAtMs).toISOString(),
@@ -370,6 +396,7 @@ export function getOrder(id: string): Order | undefined {
 
 export function setOrderTxHash(id: string, txHash: string) {
   mutate((state) => {
+    if (state.orders.some((item) => item.tx_hash === txHash)) return;
     let order = state.orders.find((item) => item.id === id);
     if (!order) {
       const synthesized = synthesizeOrder(id);

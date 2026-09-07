@@ -20,7 +20,7 @@ Default admin login is `admin` / `admin123`.
 
 ## Payment
 
-Checkout shows the merchant address. Send the exact USDC amount on Sepolia. The app polls for a matching transfer, then reveals the codes.
+Checkout shows the merchant address and a unique USDC amount. Send that exact amount on Sepolia. The last digits identify the order so two $25 checkouts do not share a payment. The app polls for that transfer, then reveals the codes.
 
 `DEMO_AUTO_PAY` defaults on. After about 8 seconds the order fulfills so you can walk the UI without a wallet. Set `DEMO_AUTO_PAY=0` to require a real transfer.
 

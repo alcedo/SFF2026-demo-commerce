@@ -9,7 +9,8 @@
     "lint": "eslint",
     "setup:env": "node scripts/setup-env.mjs",
     "test:e2e": "node --env-file=.env.local scripts/fund-fork.mjs && node --env-file=.env.local scripts/e2e-purchase.mjs",
-    "verify:purchase": "node scripts/verify-purchase.mjs"
+    "verify:purchase": "node scripts/verify-purchase.mjs",
+    "test": "node --experimental-strip-types --test src/lib/payable-amount.test.ts"
   },
   "dependencies": {
     "next": "16.3.4",
