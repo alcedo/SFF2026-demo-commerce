@@ -124,6 +124,14 @@ const DDL = [
    DECLARE
      v_reserved INTEGER;
    BEGIN
+     INSERT INTO orders (
+       id, product_id, quantity, buyer_address, amount_micro,
+       derivation_index, tx_hash, status, created_at, paid_at
+     ) VALUES (
+       p_id, p_product_id, p_quantity, p_buyer, p_amount,
+       p_index, NULL, 'pending', p_created, NULL
+     );
+
      UPDATE vouchers
         SET status = 'reserved', order_id = p_id
       WHERE id IN (
@@ -140,15 +148,7 @@ const DDL = [
        RAISE EXCEPTION 'Not enough vouchers in stock';
      END IF;
 
-     RETURN QUERY
-     INSERT INTO orders (
-       id, product_id, quantity, buyer_address, amount_micro,
-       derivation_index, tx_hash, status, created_at, paid_at
-     ) VALUES (
-       p_id, p_product_id, p_quantity, p_buyer, p_amount,
-       p_index, NULL, 'pending', p_created, NULL
-     )
-     RETURNING *;
+     RETURN QUERY SELECT * FROM orders WHERE id = p_id;
    END;
    $$`,
 ];
