@@ -1,4 +1,3 @@
-import { createHash } from "crypto";
 import { createPublicClient, http, parseAbiItem } from "viem";
 import {
   CHAIN,
@@ -15,6 +14,7 @@ import {
   setOrderTxHash,
   type Order,
 } from "./db";
+import { demoTxHash } from "./order-token";
 
 const publicClient = createPublicClient({
   chain: CHAIN,
@@ -97,11 +97,6 @@ export async function findIncomingUsdcTransfer(input: {
   } catch {
     return null;
   }
-}
-
-export function demoTxHash(orderId: string): `0x${string}` {
-  const hex = createHash("sha256").update(`demo:${orderId}`).digest("hex");
-  return `0x${hex}`;
 }
 
 export async function detectAndFulfill(order: Order): Promise<Order> {

@@ -7,7 +7,7 @@ export const USDC_ADDRESS =
   "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238" as const;
 
 export const MERCHANT_ADDRESS = (process.env.MERCHANT_ADDRESS ??
-  "0x0000000000000000000000000000000000000000") as `0x${string}`;
+  "0x006450335E618A9Fae2ad89542af411C8668d87D") as `0x${string}`;
 
 export const ADMIN_USERNAME = process.env.ADMIN_USERNAME ?? "admin";
 export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "admin123";
@@ -21,6 +21,9 @@ export const DEMO_AUTO_PAY = process.env.DEMO_AUTO_PAY !== "0";
 export const DEMO_AUTO_PAY_MS = Number(process.env.DEMO_AUTO_PAY_MS ?? "8000");
 
 export const ADMIN_COOKIE = "vs_admin";
+
+export const ORDER_SECRET =
+  process.env.ORDER_SECRET ?? process.env.ADMIN_PASSWORD ?? "vouchershop-demo";
 
 export function toMicroUsdc(amount: number): bigint {
   return BigInt(Math.round(amount * 10 ** USDC_DECIMALS));

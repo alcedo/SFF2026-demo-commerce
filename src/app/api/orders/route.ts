@@ -1,4 +1,3 @@
-import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createOrder, getOrder, getProduct, getProductBySlug } from "@/lib/db";
 import { toPublicOrder } from "@/lib/order-view";
@@ -17,7 +16,6 @@ export async function POST(request: NextRequest) {
 
   try {
     const order = createOrder({
-      id: randomUUID(),
       productId: product.id,
       quantity,
       buyerAddress:
