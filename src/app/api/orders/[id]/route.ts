@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { detectAndFulfill } from "@/lib/deposit";
 import { getOrder } from "@/lib/db";
 import { toPublicOrder } from "@/lib/order-view";
-import { detectAndFulfill } from "@/lib/payment";
 
 export async function GET(
   _request: NextRequest,

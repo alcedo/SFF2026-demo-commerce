@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fulfillOrder, getOrder, setOrderTxHash } from "@/lib/db";
+import { verifyPostedPayment } from "@/lib/deposit";
+import { getOrder } from "@/lib/db";
 import { toPublicOrder } from "@/lib/order-view";
-import { verifyUsdcPayment } from "@/lib/payment";
+
+function parseTxHash(value: unknown): `0x${string}` | null {
+  if (typeof value !== "string") return null;
+  if (!/^0x[0-9a-fA-F]{64}$/.test(value)) return null;
+  return value as `0x${string}`;
+}
 
 export async function POST(
   request: NextRequest,
@@ -9,7 +15,7 @@ export async function POST(
 ) {
   const { id } = await params;
   const body = (await request.json()) as Record<string, unknown>;
-  const txHash = body.txHash as `0x${string}` | undefined;
+  const txHash = parseTxHash(body.txHash);
 
   const order = getOrder(id);
   if (!order) {
@@ -24,17 +30,10 @@ export async function POST(
     return NextResponse.json({ error: "Missing txHash" }, { status: 400 });
   }
 
-  const verification = await verifyUsdcPayment({
-    txHash,
-    expectedAmountMicro: BigInt(order.amount_micro),
-    buyerAddress: order.buyer_address ?? undefined,
-  });
-
+  const verification = await verifyPostedPayment({ order, txHash });
   if (!verification.ok) {
     return NextResponse.json({ error: verification.error }, { status: 400 });
   }
 
-  setOrderTxHash(id, txHash);
-  fulfillOrder(id);
   return NextResponse.json({ order: toPublicOrder(getOrder(id)!) });
 }

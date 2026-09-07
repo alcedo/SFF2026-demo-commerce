@@ -20,11 +20,11 @@ Default admin login is `admin` / `admin123`.
 
 ## Payment
 
-Checkout shows the merchant address. Send the exact USDC amount on Sepolia. The app polls for a matching transfer, then reveals the codes.
+Checkout shows a per-order deposit address. Send the exact USDC amount on Sepolia to that address. The app polls for a matching transfer, then reveals the codes.
 
 `DEMO_AUTO_PAY` defaults on. After about 8 seconds the order fulfills so you can walk the UI without a wallet. Set `DEMO_AUTO_PAY=0` to require a real transfer.
 
-On-chain checks still run through `src/lib/payment.ts` and `POST /api/orders/[id]/verify`.
+On-chain checks run through `src/lib/deposit.ts` and `POST /api/orders/[id]/verify`. The pay-to address is derived from the order id. It is not stored.
 
 Orders use a signed id (`slug.qty.timestamp.hmac`) so a Vercel isolate can reconstruct a pending purchase without a shared database.
 
@@ -52,6 +52,7 @@ With an Anvil Sepolia fork on port 8545, and `.env.local` pointed at that RPC:
 
 ```bash
 anvil --fork-url https://ethereum-sepolia-rpc.publicnode.com --port 8545 --chain-id 11155111
-# set SEPOLIA_RPC_URL=http://127.0.0.1:8545 in .env.local
+# set SEPOLIA_RPC_URL=http://127.0.0.1:8545 and DEMO_AUTO_PAY=0 in .env.local
 npm run test:e2e
+npm run test:anvil-ten
 ```

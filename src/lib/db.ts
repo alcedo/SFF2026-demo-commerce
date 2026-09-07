@@ -360,52 +360,50 @@ export function getOrder(id: string): Order | undefined {
   const order = stored ?? synthesizeOrder(id);
   if (!order) return undefined;
   if (shouldAutoPay(order)) {
-    setOrderTxHash(order.id, demoTxHash(order.id));
-    fulfillOrder(order.id);
-    return loadState().orders.find((item) => item.id === id) ?? order;
+    return fulfillWithTx({ id: order.id, txHash: demoTxHash(order.id) });
   }
   if (!stored) rememberOrder(order);
   return loadState().orders.find((item) => item.id === id) ?? order;
 }
 
-export function setOrderTxHash(id: string, txHash: string) {
-  mutate((state) => {
-    let order = state.orders.find((item) => item.id === id);
-    if (!order) {
-      const synthesized = synthesizeOrder(id);
-      if (synthesized) {
-        state.orders.push(synthesized);
-        attachDerivedVouchers(state, synthesized);
-        order = synthesized;
-      }
-    }
-    if (order && !order.tx_hash) order.tx_hash = txHash;
-  });
-}
-
-export function fulfillOrder(orderId: string) {
+export function fulfillWithTx(input: { id: string; txHash: `0x${string}` }): Order {
   const now = new Date().toISOString();
+  let paid: Order | undefined;
   mutate((state) => {
-    let order = state.orders.find((item) => item.id === orderId);
+    let order = state.orders.find((item) => item.id === input.id);
     if (!order) {
-      const synthesized = synthesizeOrder(orderId);
+      const synthesized = synthesizeOrder(input.id);
       if (synthesized) {
         state.orders.push(synthesized);
         attachDerivedVouchers(state, synthesized);
         order = synthesized;
       }
     }
-    if (!order) return;
+    if (!order) {
+      throw new Error("Order not found");
+    }
+    if (order.status === "paid") {
+      paid = order;
+      return;
+    }
+    if (!order.tx_hash) {
+      order.tx_hash = input.txHash;
+    }
     order.status = "paid";
     order.paid_at = now;
     attachDerivedVouchers(state, order);
     for (const voucher of state.vouchers) {
-      if (voucher.order_id === orderId && voucher.status === "reserved") {
+      if (voucher.order_id === input.id && voucher.status === "reserved") {
         voucher.status = "sold";
         voucher.sold_at = now;
       }
     }
+    paid = order;
   });
+  if (!paid) {
+    throw new Error("Order not found");
+  }
+  return paid;
 }
 
 export function getVouchersByOrder(orderId: string): Voucher[] {

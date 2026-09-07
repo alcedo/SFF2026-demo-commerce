@@ -3,7 +3,6 @@ import {
   createWalletClient,
   http,
   parseAbi,
-  parseUnits,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { sepolia } from "viem/chains";
@@ -13,10 +12,9 @@ const RPC_URL =
   process.env.SEPOLIA_RPC_URL ?? "https://ethereum-sepolia-rpc.publicnode.com";
 const USDC = "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238";
 const buyerKey = process.env.TEST_BUYER_PRIVATE_KEY;
-const merchantAddress = process.env.MERCHANT_ADDRESS;
 
-if (!buyerKey || !merchantAddress) {
-  console.error("Set TEST_BUYER_PRIVATE_KEY and MERCHANT_ADDRESS in .env.local");
+if (!buyerKey) {
+  console.error("Set TEST_BUYER_PRIVATE_KEY in .env.local");
   process.exit(1);
 }
 
@@ -51,9 +49,11 @@ async function main() {
   const orderData = await orderRes.json();
   if (!orderRes.ok) throw new Error(orderData.error ?? "Order creation failed");
   const order = orderData.order;
+  if (!order.depositAddress) throw new Error("Order missing depositAddress");
   console.log("Order created:", order.id);
+  console.log("Deposit:", order.depositAddress);
 
-  const amount = parseUnits(String(order.amountUsdc), 6);
+  const amount = BigInt(order.amountMicro);
   const balance = await publicClient.readContract({
     address: USDC,
     abi: erc20Abi,
@@ -71,7 +71,7 @@ async function main() {
     address: USDC,
     abi: erc20Abi,
     functionName: "transfer",
-    args: [merchantAddress, amount],
+    args: [order.depositAddress, amount],
   });
   console.log("Payment tx:", hash);
 

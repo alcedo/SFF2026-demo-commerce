@@ -71,7 +71,7 @@ export default function CheckoutPage() {
             </p>
             <p className="mt-4 text-sm text-muted">
               Optional. Send {order.amountUsdc.toFixed(2)} USDC on Sepolia to{" "}
-              {order.merchantAddress} if you want to exercise the real rail.
+              {order.depositAddress} if you want to exercise the real rail.
             </p>
           </>
         ) : (
@@ -80,8 +80,8 @@ export default function CheckoutPage() {
               1. Send {order.amountUsdc.toFixed(2)} USDC to the address below (Use Sepolia testnet)
             </p>
             <div className="panel mt-3 flex items-center gap-2 px-3 py-3 font-mono text-xs sm:text-sm">
-              <span className="flex-1 break-all text-paper">{order.merchantAddress}</span>
-              <CopyButton value={order.merchantAddress} />
+              <span className="flex-1 break-all text-paper">{order.depositAddress}</span>
+              <CopyButton value={order.depositAddress} />
             </div>
             <p className="mt-6">2. We detect your payment automatically. This usually takes 10-30 seconds.</p>
           </>
