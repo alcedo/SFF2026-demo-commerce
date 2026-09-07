@@ -28,6 +28,12 @@ Funds stay on the derived address until you sweep them to the treasury `MERCHANT
 
 On-chain checks still run through `src/lib/payment.ts` and `POST /api/orders/[id]/verify`.
 
+A Preview with `DEMO_AUTO_PAY=0`:
+
+```bash
+APP_URL=https://<preview>.vercel.app npm run test:live
+```
+
 Orders use a signed id (`slug.qty.timestamp.index.hmac`). When `DATABASE_URL` is set (Vercel Marketplace Neon), products, orders, and voucher stock live in Postgres so every isolate sees the same reservations. Without `DATABASE_URL`, the app keeps a JSON snapshot (`data/vouchershop.json` locally, `/tmp` on Vercel) and can rebuild a pending invoice from the signed id.
 
 ## Routes
@@ -49,6 +55,8 @@ With the app running:
 ```bash
 npm run verify:purchase
 ```
+
+That HTTP smoke uses demo auto-pay. It is not a live Sepolia transfer.
 
 With an Anvil Sepolia fork on port 8545, and `.env.local` pointed at that RPC:
 

@@ -25,7 +25,8 @@ This directory is the maintained source for verifying the user-facing behavior o
 - Capture the user action and the resulting state, not only the final screen.
 - UI proof includes an ARIA snapshot and a screenshot with AgentiX visible.
 - Mutation proof includes `GET /api/orders/<id>` (or the admin table) as a second view.
-- Demo auto-pay is on for these recipes. A wallet transfer is out of scope here.
+- Demo auto-pay is on for the local recipes. A wallet transfer is out of scope there.
+- [Buy with live Sepolia USDC](./live-purchase.md) is the operator-owned Vercel Preview recipe. Do not run it against isolated `launch`.
 - Record the feature ID and entry point used with every artifact.
 - Report an unreachable path with the attempted URL and the unmet precondition.
 - Do not report a skipped entry point as verified through a different path.
@@ -45,5 +46,6 @@ Keep implementation details out of the map. Name only user paths, stable handles
 
 - [Browse the catalog](./catalog.md) covers home popular cards, the full grid, search, category filter, and a product page.
 - [Buy with demo auto-pay](./demo-purchase.md) covers quantity, checkout, the eight-second confirm, receipt, and code reveal.
+- [Buy with live Sepolia USDC](./live-purchase.md) covers Preview checkout that stays pending until a real transfer.
 - [Redeem help](./redeem-help.md) covers How it works and the `/redeem` redirect.
 - [Admin inventory](./admin-inventory.md) covers login, dashboard counts, adding a code, and filtering.

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { DEMO_AUTO_PAY } from "@/lib/config";
 import {
   databaseUrlPresence,
   getSql,
@@ -26,6 +27,7 @@ export async function GET() {
         present,
         merchantKey: merchantPrivateKeyConfigured(),
         merchantKeySource: merchantPrivateKeySource(),
+        demoAutoPay: DEMO_AUTO_PAY,
       },
       { status: 503, headers: { "Cache-Control": "no-store" } }
     );
@@ -67,6 +69,7 @@ export async function GET() {
         present,
         merchantKey: merchantPrivateKeyConfigured(),
         merchantKeySource: merchantPrivateKeySource(),
+        demoAutoPay: DEMO_AUTO_PAY,
       },
       { headers: { "Cache-Control": "no-store" } }
     );
@@ -81,6 +84,7 @@ export async function GET() {
         present,
         merchantKey: merchantPrivateKeyConfigured(),
         merchantKeySource: merchantPrivateKeySource(),
+        demoAutoPay: DEMO_AUTO_PAY,
       },
       { status: 500, headers: { "Cache-Control": "no-store" } }
     );
