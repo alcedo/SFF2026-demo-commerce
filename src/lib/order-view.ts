@@ -1,6 +1,7 @@
 import { catalogBySlug } from "./catalog";
-import { formatUsdc, fromMicroUsdc, MERCHANT_ADDRESS, USDC_ADDRESS } from "./config";
+import { formatUsdc, fromMicroUsdc, USDC_ADDRESS } from "./config";
 import { countAvailable, getProduct, getVouchersByOrder, type Order, type Product } from "./db";
+import { orderDepositAddress } from "./order-deposit";
 
 export type PublicProduct = {
   id: number;
@@ -22,8 +23,10 @@ export type PublicOrder = {
   status: Order["status"];
   quantity: number;
   amountUsdc: number;
+  amountMicro: number;
   amountLabel: string;
   merchantAddress: string;
+  derivationIndex: number;
   usdcAddress: string;
   txHash: string | null;
   createdAt: string;
@@ -65,8 +68,10 @@ export function toPublicOrder(order: Order): PublicOrder {
     status: order.status,
     quantity: order.quantity,
     amountUsdc: fromMicroUsdc(order.amount_micro),
+    amountMicro: order.amount_micro,
     amountLabel: `${formatUsdc(order.amount_micro)} USDC`,
-    merchantAddress: MERCHANT_ADDRESS,
+    merchantAddress: orderDepositAddress(order.derivation_index),
+    derivationIndex: order.derivation_index,
     usdcAddress: USDC_ADDRESS,
     txHash: order.tx_hash,
     createdAt: order.created_at,

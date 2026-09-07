@@ -3,18 +3,22 @@ import {
   CHAIN,
   DEMO_AUTO_PAY,
   DEMO_AUTO_PAY_MS,
-  MERCHANT_ADDRESS,
   RPC_URL,
   USDC_ADDRESS,
 } from "./config";
 import {
+  expireOrder,
   fulfillOrder,
   getOrder,
+  isInvoiceAged,
   isTxHashUsed,
+  listPendingOrders,
   setOrderTxHash,
   type Order,
 } from "./db";
+import { orderDepositAddress } from "./order-deposit";
 import { demoTxHash } from "./order-token";
+import { matchUnusedTransfer } from "./usdc-transfer";
 
 const publicClient = createPublicClient({
   chain: CHAIN,
@@ -28,6 +32,7 @@ const transferEvent = parseAbiItem(
 export async function verifyUsdcPayment(input: {
   txHash: `0x${string}`;
   expectedAmountMicro: bigint;
+  depositAddress: `0x${string}`;
   buyerAddress?: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
@@ -54,7 +59,7 @@ export async function verifyUsdcPayment(input: {
       const to = log.args.to?.toLowerCase();
       const from = log.args.from?.toLowerCase();
       const value = log.args.value;
-      if (to !== MERCHANT_ADDRESS.toLowerCase()) return false;
+      if (to !== input.depositAddress.toLowerCase()) return false;
       if (value !== input.expectedAmountMicro) return false;
       if (input.buyerAddress && from !== input.buyerAddress.toLowerCase()) {
         return false;
@@ -65,7 +70,7 @@ export async function verifyUsdcPayment(input: {
     if (!match) {
       return {
         ok: false,
-        error: "No matching USDC transfer to merchant in transaction",
+        error: "No matching USDC transfer to this order's address",
       };
     }
 
@@ -79,6 +84,7 @@ export async function verifyUsdcPayment(input: {
 
 export async function findIncomingUsdcTransfer(input: {
   expectedAmountMicro: bigint;
+  depositAddress: `0x${string}`;
 }): Promise<`0x${string}` | null> {
   try {
     const latest = await publicClient.getBlockNumber();
@@ -87,30 +93,40 @@ export async function findIncomingUsdcTransfer(input: {
     const logs = await publicClient.getLogs({
       address: USDC_ADDRESS,
       event: transferEvent,
-      args: { to: MERCHANT_ADDRESS },
+      args: { to: input.depositAddress },
       fromBlock,
       toBlock: latest,
     });
-    const match = [...logs].reverse().find((log) => {
-      if (log.args.value !== input.expectedAmountMicro) return false;
-      if (isTxHashUsed(log.transactionHash)) return false;
-      return true;
-    });
-    return match?.transactionHash ?? null;
+    const mapped = logs.flatMap((log) =>
+      log.args.value === undefined
+        ? []
+        : [{ value: log.args.value, tx: log.transactionHash }]
+    );
+    const used = new Set(
+      mapped.filter((log) => isTxHashUsed(log.tx)).map((log) => log.tx)
+    );
+    return matchUnusedTransfer(mapped, input.expectedAmountMicro, used);
   } catch {
     return null;
   }
 }
 
+export async function reconcileAgedInvoices(): Promise<void> {
+  for (const order of listPendingOrders()) {
+    if (!isInvoiceAged(order)) continue;
+    await detectAndFulfill(order);
+  }
+}
+
 export async function detectAndFulfill(order: Order): Promise<Order> {
-  if (order.status === "paid") return order;
+  if (order.status === "paid" || order.status === "expired") return order;
 
   const onchain = await findIncomingUsdcTransfer({
     expectedAmountMicro: BigInt(order.amount_micro),
+    depositAddress: orderDepositAddress(order.derivation_index),
   });
   if (onchain) {
-    setOrderTxHash(order.id, onchain);
-    fulfillOrder(order.id);
+    if (setOrderTxHash(order.id, onchain)) fulfillOrder(order.id);
     return getOrder(order.id)!;
   }
 
@@ -121,10 +137,14 @@ export async function detectAndFulfill(order: Order): Promise<Order> {
         : `${order.created_at.replace(" ", "T")}Z`
     );
     if (Number.isFinite(createdMs) && createdMs >= DEMO_AUTO_PAY_MS) {
-      setOrderTxHash(order.id, demoTxHash(order.id));
-      fulfillOrder(order.id);
+      if (setOrderTxHash(order.id, demoTxHash(order.id))) fulfillOrder(order.id);
       return getOrder(order.id)!;
     }
+  }
+
+  if (isInvoiceAged(order)) {
+    expireOrder(order.id);
+    return getOrder(order.id)!;
   }
 
   return order;

@@ -10,7 +10,7 @@ export default function SettingsPage() {
   const rows = [
     ["Network", NETWORK_NAME],
     ["USDC contract", USDC_ADDRESS],
-    ["Merchant address", MERCHANT_ADDRESS],
+    ["Treasury address", MERCHANT_ADDRESS],
     ["Admin username", ADMIN_USERNAME],
     ["Demo auto-detect", DEMO_AUTO_PAY ? "On" : "Off"],
   ];
