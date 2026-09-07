@@ -1,5 +1,3 @@
-import { neon } from "@neondatabase/serverless";
-
 const URL_KEYS = [
   "DATABASE_URL",
   "POSTGRES_URL",
@@ -25,6 +23,7 @@ function hostFromUrl(url) {
 
 const found = connectionString();
 const onVercel = Boolean(process.env.VERCEL);
+const query = process.argv.includes("--query");
 
 if (!found) {
   if (onVercel) {
@@ -37,6 +36,13 @@ if (!found) {
   process.exit(0);
 }
 
+console.log(`NEON_TEST env ok using=${found.key} host=${hostFromUrl(found.url)}`);
+
+if (!query) {
+  process.exit(0);
+}
+
+const { neon } = await import("@neondatabase/serverless");
 try {
   const sql = neon(found.url);
   const rows = await sql`
@@ -44,10 +50,10 @@ try {
   `;
   const row = rows[0];
   console.log(
-    `NEON_TEST ok using=${found.key} database=${row.database} user=${row.db_user} host=${hostFromUrl(found.url)}`
+    `NEON_TEST query ok database=${row.database} user=${row.db_user}`
   );
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(`NEON_TEST failed: ${message}`);
+  console.error(`NEON_TEST query failed: ${message}`);
   process.exit(1);
 }
