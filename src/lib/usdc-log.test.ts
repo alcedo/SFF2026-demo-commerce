@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { USDC_ADDRESS } from "./config.ts";
 import {
   decodeUsdcTransfer,
+  mergeRpcLogs,
   paddedAddress,
   topicAddress,
   USDC_TOKEN,
@@ -39,6 +40,14 @@ describe("decodeUsdcTransfer", () => {
       decodeUsdcTransfer({ ...receiptLog, address: "0x" + "11".repeat(20) }),
       null
     );
+  });
+});
+
+describe("mergeRpcLogs", () => {
+  it("keeps hits from a later RPC when an earlier one returns no logs", () => {
+    const merged = mergeRpcLogs([[], [receiptLog]]);
+    assert.equal(merged.length, 1);
+    assert.equal(merged[0].transactionHash, receiptLog.transactionHash);
   });
 });
 

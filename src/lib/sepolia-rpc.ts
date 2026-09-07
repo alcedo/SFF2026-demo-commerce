@@ -1,5 +1,5 @@
 import { RPC_URL } from "./config";
-import type { RpcLog } from "./usdc-log";
+import { mergeRpcLogs, type RpcLog } from "./usdc-log";
 
 const RPC_TIMEOUT_MS = 4_000;
 
@@ -50,7 +50,11 @@ export async function sepoliaRpc<T>(
   params: unknown[]
 ): Promise<T> {
   return await Promise.any(
-    RPC_URLS.map((url) => rpcOne<T>(url, method, params))
+    RPC_URLS.map(async (url) => {
+      const result = await rpcOne<T>(url, method, params);
+      if (result == null) throw new Error(`${url} empty ${method}`);
+      return result;
+    })
   );
 }
 
@@ -60,7 +64,7 @@ export async function sepoliaGetLogs(input: {
   fromBlock: bigint;
   toBlock: bigint;
 }): Promise<RpcLog[]> {
-  return await Promise.any(
+  const settled = await Promise.allSettled(
     RPC_URLS.map(async (url) => {
       const latest = BigInt(await rpcOne<string>(url, "eth_blockNumber", []));
       const head = latest > BigInt(1) ? latest - BigInt(1) : latest;
@@ -76,6 +80,13 @@ export async function sepoliaGetLogs(input: {
       ]);
     })
   );
+  const batches = settled.flatMap((item) =>
+    item.status === "fulfilled" ? [item.value] : []
+  );
+  if (batches.length === 0) {
+    throw new Error("Sepolia getLogs failed on every RPC");
+  }
+  return mergeRpcLogs(batches);
 }
 
 export function toHex(value: bigint): `0x${string}` {

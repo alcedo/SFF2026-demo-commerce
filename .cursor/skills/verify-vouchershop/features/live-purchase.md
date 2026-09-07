@@ -40,5 +40,5 @@ Preconditions:
 - `NEXT_PUBLIC_DEMO_AUTO_PAY` is baked at build. Setting it to `0` without a new Preview still shows `Demo · Sepolia`.
 - Isolated `launch` turns demo auto-pay on. Do not run this recipe against `http://127.0.0.1:4173`.
 - Preview APIs sit behind Vercel Authentication. A share link sets `_vercel_jwt` for document navigations and for POST. Client `GET /api/orders` still 302s to SSO. Open HTML routes with the share cookie. Poll pay with POST.
-- Public Sepolia RPC can stall from Vercel. Detect races publicnode, 1rpc, and Tenderly with a 4s abort each. Verify reads Transfer logs off `eth_getTransactionReceipt`, not a second `getLogs`. `POST /api/orders/<id>/verify` with the tx hash is the fallback the live script uses first.
+- Public Sepolia RPC can stall from Vercel. Detect races publicnode, 1rpc, and Tenderly with a 4s abort each and merges log results so an empty lagging node cannot win. Verify reads Transfer logs off `eth_getTransactionReceipt`. `POST /api/orders/<id>/verify` with the tx hash still fulfills an expired invoice when the Transfer is real.
 - Quantity 1 Amazon costs 0.025 USDC. A dry buyer address fails the script before it broadcasts.

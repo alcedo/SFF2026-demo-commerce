@@ -5,13 +5,12 @@ import {
   USDC_ADDRESS,
 } from "./config";
 import {
+  applyVerifiedPayment,
   expireOrder,
-  fulfillOrder,
   getOrder,
   isInvoiceAged,
   isTxHashUsed,
   listPendingOrders,
-  setOrderTxHash,
   type Order,
 } from "./db";
 import { orderDepositAddress } from "./order-deposit";
@@ -88,7 +87,7 @@ export async function verifyUsdcPayment(input: {
 export async function findIncomingUsdcTransfer(input: {
   expectedAmountMicro: bigint;
   depositAddress: `0x${string}`;
-}): Promise<`0x${string}` | null> {
+}): Promise<{ scanned: boolean; tx: `0x${string}` | null }> {
   try {
     const latestHex = await sepoliaRpc<string>("eth_blockNumber", []);
     const latest = BigInt(latestHex);
@@ -121,9 +120,12 @@ export async function findIncomingUsdcTransfer(input: {
         )
       ).filter((tx): tx is `0x${string}` => Boolean(tx))
     );
-    return matchUnusedTransfer(mapped, input.expectedAmountMicro, used);
+    return {
+      scanned: true,
+      tx: matchUnusedTransfer(mapped, input.expectedAmountMicro, used),
+    };
   } catch {
-    return null;
+    return { scanned: false, tx: null };
   }
 }
 
@@ -135,18 +137,21 @@ export async function reconcileAgedInvoices(): Promise<void> {
 }
 
 export async function detectAndFulfill(order: Order): Promise<Order> {
-  if (order.status === "paid" || order.status === "expired") return order;
+  if (order.status === "paid") return order;
 
   if (!DEMO_AUTO_PAY) {
     const onchain = await findIncomingUsdcTransfer({
       expectedAmountMicro: BigInt(order.amount_micro),
       depositAddress: orderDepositAddress(order.derivation_index),
     });
-    if (onchain) {
-      if (await setOrderTxHash(order.id, onchain)) await fulfillOrder(order.id);
+    if (onchain.tx) {
+      await applyVerifiedPayment(order.id, onchain.tx);
       return (await getOrder(order.id))!;
     }
+    if (!onchain.scanned) return order;
   }
+
+  if (order.status === "expired") return order;
 
   if (DEMO_AUTO_PAY) {
     const createdMs = Date.now() - Date.parse(
@@ -155,9 +160,7 @@ export async function detectAndFulfill(order: Order): Promise<Order> {
         : `${order.created_at.replace(" ", "T")}Z`
     );
     if (Number.isFinite(createdMs) && createdMs >= DEMO_AUTO_PAY_MS) {
-      if (await setOrderTxHash(order.id, demoTxHash(order.id))) {
-        await fulfillOrder(order.id);
-      }
+      await applyVerifiedPayment(order.id, demoTxHash(order.id));
       return (await getOrder(order.id))!;
     }
   }

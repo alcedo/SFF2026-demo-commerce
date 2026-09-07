@@ -26,6 +26,20 @@ export function paddedAddress(address: string): `0x${string}` {
   return `0x${address.slice(2).toLowerCase().padStart(64, "0")}`;
 }
 
+export function mergeRpcLogs(batches: RpcLog[][]): RpcLog[] {
+  const merged: RpcLog[] = [];
+  const seen = new Set<string>();
+  for (const batch of batches) {
+    for (const log of batch) {
+      const key = `${log.transactionHash}:${log.topics.join(":")}:${log.data}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      merged.push(log);
+    }
+  }
+  return merged;
+}
+
 export function decodeUsdcTransfer(log: RpcLog): DecodedTransfer | null {
   if (log.address.toLowerCase() !== USDC_TOKEN.toLowerCase()) return null;
   if (log.topics[0]?.toLowerCase() !== TRANSFER_TOPIC) return null;
