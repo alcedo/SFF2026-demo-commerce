@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/test-neon.mjs && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "setup:env": "node scripts/setup-env.mjs",
+    "test:neon": "node scripts/test-neon.mjs --query",
     "test:e2e": "node --env-file=.env.local scripts/fund-fork.mjs && node --env-file=.env.local scripts/e2e-purchase.mjs",
     "verify:purchase": "node scripts/verify-purchase.mjs",
     "test": "node --experimental-strip-types --test src/lib/order-deposit.test.ts"
