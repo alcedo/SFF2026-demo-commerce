@@ -34,6 +34,16 @@ npm run test:e2e
 
 The `fund-fork.mjs` script impersonates a USDC whale and sends 100 USDC + 1 ETH to the buyer.
 
+Ten independent buyers (fresh keys, distinct HD deposits, poll detection, `DEMO_AUTO_PAY=0`):
+
+```bash
+anvil --fork-url https://ethereum-sepolia-rpc.publicnode.com --port 8545 --chain-id 11155111
+npm run dev:anvil
+npm run test:e2e:ten
+```
+
+`dev:anvil` loads `config/test-wallets.env` then `config/anvil.env` and serves the shop on `http://127.0.0.1:4010`.
+
 ### Live Sepolia (MetaMask / manual testing)
 
 Fund the **buyer** address:

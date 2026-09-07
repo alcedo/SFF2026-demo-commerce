@@ -57,3 +57,11 @@ anvil --fork-url https://ethereum-sepolia-rpc.publicnode.com --port 8545 --chain
 # set SEPOLIA_RPC_URL=http://127.0.0.1:8545 in .env.local
 npm run test:e2e
 ```
+
+Ten buyers on the same fork (`DEMO_AUTO_PAY=0`, shop on port 4010):
+
+```bash
+anvil --fork-url https://ethereum-sepolia-rpc.publicnode.com --port 8545 --chain-id 11155111
+npm run dev:anvil
+npm run test:e2e:ten
+```
