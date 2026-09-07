@@ -36,9 +36,10 @@ export function fromMicroUsdc(micro: number | bigint): number {
 
 export function formatUsdc(micro: number | bigint): string {
   const value = BigInt(micro);
-  const sign = value < 0n ? "-" : "";
-  const abs = value < 0n ? -value : value;
-  const base = 10n ** BigInt(USDC_DECIMALS);
+  const zero = BigInt(0);
+  const sign = value < zero ? "-" : "";
+  const abs = value < zero ? -value : value;
+  const base = BigInt(10) ** BigInt(USDC_DECIMALS);
   const whole = abs / base;
   const frac = (abs % base)
     .toString()
