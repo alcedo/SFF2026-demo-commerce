@@ -3,7 +3,6 @@ import {
   CHAIN,
   DEMO_AUTO_PAY,
   DEMO_AUTO_PAY_MS,
-  MERCHANT_ADDRESS,
   RPC_URL,
   USDC_ADDRESS,
 } from "./config";
@@ -14,8 +13,9 @@ import {
   setOrderTxHash,
   type Order,
 } from "./db";
+import { orderDepositAddress } from "./order-deposit";
 import { demoTxHash } from "./order-token";
-import { matchUnusedTransfer } from "./payable-amount";
+import { matchUnusedTransfer } from "./usdc-transfer";
 
 const publicClient = createPublicClient({
   chain: CHAIN,
@@ -29,6 +29,7 @@ const transferEvent = parseAbiItem(
 export async function verifyUsdcPayment(input: {
   txHash: `0x${string}`;
   expectedAmountMicro: bigint;
+  depositAddress: `0x${string}`;
   buyerAddress?: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
@@ -55,7 +56,7 @@ export async function verifyUsdcPayment(input: {
       const to = log.args.to?.toLowerCase();
       const from = log.args.from?.toLowerCase();
       const value = log.args.value;
-      if (to !== MERCHANT_ADDRESS.toLowerCase()) return false;
+      if (to !== input.depositAddress.toLowerCase()) return false;
       if (value !== input.expectedAmountMicro) return false;
       if (input.buyerAddress && from !== input.buyerAddress.toLowerCase()) {
         return false;
@@ -66,7 +67,7 @@ export async function verifyUsdcPayment(input: {
     if (!match) {
       return {
         ok: false,
-        error: "No matching USDC transfer to merchant in transaction",
+        error: "No matching USDC transfer to this order's address",
       };
     }
 
@@ -80,6 +81,7 @@ export async function verifyUsdcPayment(input: {
 
 export async function findIncomingUsdcTransfer(input: {
   expectedAmountMicro: bigint;
+  depositAddress: `0x${string}`;
 }): Promise<`0x${string}` | null> {
   try {
     const latest = await publicClient.getBlockNumber();
@@ -88,7 +90,7 @@ export async function findIncomingUsdcTransfer(input: {
     const logs = await publicClient.getLogs({
       address: USDC_ADDRESS,
       event: transferEvent,
-      args: { to: MERCHANT_ADDRESS },
+      args: { to: input.depositAddress },
       fromBlock,
       toBlock: latest,
     });
@@ -111,6 +113,7 @@ export async function detectAndFulfill(order: Order): Promise<Order> {
 
   const onchain = await findIncomingUsdcTransfer({
     expectedAmountMicro: BigInt(order.amount_micro),
+    depositAddress: orderDepositAddress(order.id),
   });
   if (onchain) {
     if (setOrderTxHash(order.id, onchain)) fulfillOrder(order.id);

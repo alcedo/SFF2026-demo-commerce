@@ -8,11 +8,6 @@ import {
   parseOrderToken,
   voucherCode,
 } from "./order-token";
-import {
-  newPayTag,
-  PAY_TAG_ALLOCATE_ATTEMPTS,
-  payableAmountMicro,
-} from "./payable-amount";
 
 export type Product = {
   id: number;
@@ -252,10 +247,7 @@ function synthesizeOrder(id: string): Order | undefined {
     product_id: product.id,
     quantity: claims.quantity,
     buyer_address: null,
-    amount_micro: payableAmountMicro(
-      product.price_micro * claims.quantity,
-      claims.payTag
-    ),
+    amount_micro: product.price_micro * claims.quantity,
     tx_hash: null,
     status: "pending",
     created_at,
@@ -324,7 +316,14 @@ export function createOrder(input: {
   }
 
   const createdAtMs = Date.now();
-  const baseMicro = product.price_micro * quantity;
+  const id =
+    input.id ??
+    issueOrderToken({
+      slug: product.slug,
+      quantity,
+      createdAtMs,
+    });
+
   let created: Order | undefined;
   mutate((state) => {
     const available = state.vouchers.filter(
@@ -334,41 +333,12 @@ export function createOrder(input: {
     if (available.length < quantity) {
       throw new Error("Not enough vouchers in stock");
     }
-    const taken = new Set(
-      state.orders
-        .filter((order) => order.status === "pending")
-        .map((order) => order.amount_micro)
-    );
-    let payTag: number;
-    if (input.id) {
-      const claims = parseOrderToken(input.id);
-      if (!claims) throw new Error("Invalid order id");
-      payTag = claims.payTag;
-    } else {
-      payTag = newPayTag();
-      for (let attempt = 0; attempt < PAY_TAG_ALLOCATE_ATTEMPTS; attempt += 1) {
-        if (!taken.has(payableAmountMicro(baseMicro, payTag))) break;
-        payTag = newPayTag();
-      }
-    }
-    const amountMicro = payableAmountMicro(baseMicro, payTag);
-    if (!input.id && taken.has(amountMicro)) {
-      throw new Error("Could not allocate a unique payable amount");
-    }
-    const id =
-      input.id ??
-      issueOrderToken({
-        slug: product.slug,
-        quantity,
-        createdAtMs,
-        payTag,
-      });
     const order: Order = {
       id,
       product_id: input.productId,
       quantity,
       buyer_address: input.buyerAddress ?? null,
-      amount_micro: amountMicro,
+      amount_micro: product.price_micro * quantity,
       tx_hash: null,
       status: "pending",
       created_at: new Date(createdAtMs).toISOString(),

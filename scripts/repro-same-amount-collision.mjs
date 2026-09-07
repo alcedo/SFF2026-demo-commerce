@@ -12,32 +12,37 @@ for (let i = 0; i < 10; i += 1) {
   orders.push(body.order);
 }
 
-const amounts = orders.map((order) => order.amountMicro);
-const unique = new Set(amounts);
+const amounts = new Set(orders.map((order) => order.amountMicro));
+const addresses = new Set(orders.map((order) => order.merchantAddress));
 console.log(
-  orders.map((order) => `${order.id} ${order.amountLabel}`).join("\n")
+  orders
+    .map((order) => `${order.id} ${order.amountLabel} ${order.merchantAddress}`)
+    .join("\n")
 );
-console.log("unique amounts:", unique.size);
+console.log("unique amounts:", amounts.size);
+console.log("unique deposit addresses:", addresses.size);
 
-if (unique.size !== 10) {
-  console.log("FAIL ten Amazon checkouts still share a payable amount");
+if (amounts.size !== 1 || !amounts.has(25_000_000)) {
+  console.log("FAIL ten Amazon checkouts must all invoice 25.00 USDC");
+  process.exit(1);
+}
+
+if (addresses.size !== 10) {
+  console.log("FAIL ten Amazon checkouts still share a deposit address");
   process.exit(1);
 }
 
 for (const order of orders) {
-  const parts = order.id.split(".");
-  const tag = Number(parts[3]);
-  const expected = 25_000_000 + tag;
-  if (order.amountMicro !== expected) {
-    console.log("FAIL token tag does not reconstruct amount", order.id, order.amountMicro);
-    process.exit(1);
-  }
   const poll = await fetch(`${APP}/api/orders/${order.id}`);
   const again = await poll.json();
-  if (again.order.amountMicro !== order.amountMicro) {
-    console.log("FAIL GET changed the invoice amount");
+  if (again.order.merchantAddress !== order.merchantAddress) {
+    console.log("FAIL GET changed the deposit address");
+    process.exit(1);
+  }
+  if (again.order.amountMicro !== 25_000_000) {
+    console.log("FAIL GET changed the catalog amount");
     process.exit(1);
   }
 }
 
-console.log("PASS ten simultaneous Amazon invoices are distinct and stable");
+console.log("PASS ten simultaneous Amazon orders share 25.00 USDC and keep distinct deposit addresses");

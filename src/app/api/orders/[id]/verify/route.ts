@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fulfillOrder, getOrder, setOrderTxHash } from "@/lib/db";
+import { orderDepositAddress } from "@/lib/order-deposit";
 import { toPublicOrder } from "@/lib/order-view";
 import { verifyUsdcPayment } from "@/lib/payment";
 
@@ -27,6 +28,7 @@ export async function POST(
   const verification = await verifyUsdcPayment({
     txHash,
     expectedAmountMicro: BigInt(order.amount_micro),
+    depositAddress: orderDepositAddress(id),
     buyerAddress: order.buyer_address ?? undefined,
   });
 

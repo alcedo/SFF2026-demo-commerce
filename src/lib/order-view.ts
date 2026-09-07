@@ -1,6 +1,7 @@
 import { catalogBySlug } from "./catalog";
-import { formatUsdc, fromMicroUsdc, MERCHANT_ADDRESS, USDC_ADDRESS } from "./config";
+import { formatUsdc, fromMicroUsdc, USDC_ADDRESS } from "./config";
 import { countAvailable, getProduct, getVouchersByOrder, type Order, type Product } from "./db";
+import { orderDepositAddress } from "./order-deposit";
 
 export type PublicProduct = {
   id: number;
@@ -70,7 +71,7 @@ export function toPublicOrder(order: Order): PublicOrder {
     amountMicro: order.amount_micro,
     amountExact: formatUsdc(order.amount_micro),
     amountLabel: `${formatUsdc(order.amount_micro)} USDC`,
-    merchantAddress: MERCHANT_ADDRESS,
+    merchantAddress: orderDepositAddress(order.id),
     usdcAddress: USDC_ADDRESS,
     txHash: order.tx_hash,
     createdAt: order.created_at,

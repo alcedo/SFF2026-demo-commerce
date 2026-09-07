@@ -23,8 +23,11 @@ async function main() {
   }
   const catalogUsdc = 75;
   const payable = orderData.order.amountUsdc;
-  if (payable < catalogUsdc || payable >= catalogUsdc + 0.01) {
-    throw new Error(`Expected ${catalogUsdc}.xxxxxx USDC, got ${payable}`);
+  if (payable !== catalogUsdc) {
+    throw new Error(`Expected ${catalogUsdc} USDC, got ${payable}`);
+  }
+  if (!orderData.order.merchantAddress) {
+    throw new Error("Order missing deposit address");
   }
 
   let paid = null;

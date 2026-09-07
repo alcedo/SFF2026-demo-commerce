@@ -20,7 +20,9 @@ Default admin login is `admin` / `admin123`.
 
 ## Payment
 
-Checkout shows the merchant address and a unique USDC amount. Send that exact amount on Sepolia. The last digits identify the order so two $25 checkouts do not share a payment. The app polls for that transfer, then reveals the codes.
+Checkout shows the catalog USDC amount and a deposit address derived for that order from `MERCHANT_PRIVATE_KEY`. Send the listed amount on Sepolia to that address. Two $25 checkouts do not share a payment because each order has its own address. The app polls for a transfer to that address, then reveals the codes.
+
+Funds stay on the derived address until you sweep them to the treasury `MERCHANT_ADDRESS`. The derived private key is never sent to the browser.
 
 `DEMO_AUTO_PAY` defaults on. After about 8 seconds the order fulfills so you can walk the UI without a wallet. Set `DEMO_AUTO_PAY=0` to require a real transfer.
 

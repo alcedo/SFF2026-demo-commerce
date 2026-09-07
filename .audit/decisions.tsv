@@ -17,4 +17,5 @@ ts	phase	decision	why	evidence	result
 2026-09-07T05:53:49Z	copy	Tell the live site it is a demo while auto-pay is on	Gap analysis MUST FIX. Header and checkout claimed Live Sepolia	src/components/site-header.tsx src/app/(store)/checkout/[orderId]/page.tsx	open
 2026-09-07T05:53:49Z	fix	Hide ready banner until codes exist	Pending /order/[id] used quantity when codes were empty	src/app/(store)/order/[id]/page.tsx	open
 2026-09-07T05:56:08Z	fix	Bind verifyUsdcPayment to the submitted tx hash	Block-wide log scan could accept another transfer in the same block	src/lib/payment.ts verifyUsdcPayment	done
-2026-09-07T06:44:20Z	fix	Unique payTag in the signed order id	Ten same-price USDC transfers were interchangeable because amount_micro was price*qty	POST /api/orders ten amazon qty-1 then checkout 25.002063 vs 25.001753	VERIFIED
+2026-09-07T06:44:20Z	fix	Unique payTag in the signed order id	Ten same-price USDC transfers were interchangeable because amount_micro was price*qty	POST /api/orders ten amazon qty-1 then checkout 25.002063 vs 25.001753	superseded
+2026-09-07T07:20:00Z	feature	Per-order deposit address from MERCHANT_PRIVATE_KEY	Unique dust amounts were bad checkout UX; HMAC-derived secp256k1 address keeps catalog prices	POST /api/orders two amazon qty-1 show 25.00 USDC and two addresses	open

@@ -13,10 +13,9 @@ const RPC_URL =
   process.env.SEPOLIA_RPC_URL ?? "https://ethereum-sepolia-rpc.publicnode.com";
 const USDC = "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238";
 const buyerKey = process.env.TEST_BUYER_PRIVATE_KEY;
-const merchantAddress = process.env.MERCHANT_ADDRESS;
 
-if (!buyerKey || !merchantAddress) {
-  console.error("Set TEST_BUYER_PRIVATE_KEY and MERCHANT_ADDRESS in .env.local");
+if (!buyerKey) {
+  console.error("Set TEST_BUYER_PRIVATE_KEY in .env.local");
   process.exit(1);
 }
 
@@ -54,7 +53,9 @@ async function main() {
   console.log("Order created:", order.id);
 
   if (order.amountMicro == null) throw new Error("Order missing amountMicro");
+  if (!order.merchantAddress) throw new Error("Order missing deposit address");
   const amount = BigInt(order.amountMicro);
+  const depositAddress = order.merchantAddress;
   const balance = await publicClient.readContract({
     address: USDC,
     abi: erc20Abi,
@@ -72,7 +73,7 @@ async function main() {
     address: USDC,
     abi: erc20Abi,
     functionName: "transfer",
-    args: [merchantAddress, amount],
+    args: [depositAddress, amount],
   });
   console.log("Payment tx:", hash);
 
