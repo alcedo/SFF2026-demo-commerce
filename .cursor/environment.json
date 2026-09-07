@@ -1,0 +1,14 @@
+{
+  "name": "VoucherShop",
+  "install": "npm ci && npm run setup:env",
+  "terminals": [
+    {
+      "name": "next-dev",
+      "command": "npm run dev",
+      "description": "VoucherShop Next.js dev server on http://localhost:3000 (demo auto-pay on, JSON snapshot store)"
+    }
+  ],
+  "ports": [
+    { "name": "web", "port": 3000 }
+  ]
+}
