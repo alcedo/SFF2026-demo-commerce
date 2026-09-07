@@ -21,8 +21,13 @@ async function main() {
   if (orderData.order.voucherCodes?.length) {
     throw new Error("Pending order leaked codes");
   }
-  if (orderData.order.amountUsdc !== 75) {
-    throw new Error(`Expected 75 USDC, got ${orderData.order.amountUsdc}`);
+  const catalogUsdc = 75;
+  const payable = orderData.order.amountUsdc;
+  if (payable !== catalogUsdc) {
+    throw new Error(`Expected ${catalogUsdc} USDC, got ${payable}`);
+  }
+  if (!orderData.order.merchantAddress) {
+    throw new Error("Order missing deposit address");
   }
 
   let paid = null;

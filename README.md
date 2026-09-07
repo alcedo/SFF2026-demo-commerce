@@ -20,13 +20,15 @@ Default admin login is `admin` / `admin123`.
 
 ## Payment
 
-Checkout shows the merchant address. Send the exact USDC amount on Sepolia. The app polls for a matching transfer, then reveals the codes.
+Checkout shows the catalog USDC amount and a deposit address from the merchant HD tree (`m/44'/60'/0'/0/n` via `MERCHANT_PRIVATE_KEY`). Live invoices hold distinct indexes. Cancel or a 30-minute TTL expires the invoice, releases reserved codes, and returns that index to the pool. A paid index is never reused. The app polls for a USDC transfer to the current address, then reveals the codes.
+
+Funds stay on the derived address until you sweep them to the treasury `MERCHANT_ADDRESS`. Child private keys are never sent to the browser.
 
 `DEMO_AUTO_PAY` defaults on. After about 8 seconds the order fulfills so you can walk the UI without a wallet. Set `DEMO_AUTO_PAY=0` to require a real transfer.
 
 On-chain checks still run through `src/lib/payment.ts` and `POST /api/orders/[id]/verify`.
 
-Orders use a signed id (`slug.qty.timestamp.hmac`) so a Vercel isolate can reconstruct a pending purchase without a shared database.
+Orders use a signed id (`slug.qty.timestamp.index.hmac`) so a Vercel isolate can reconstruct the HD index without a shared database.
 
 ## Routes
 
