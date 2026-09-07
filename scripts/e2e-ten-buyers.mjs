@@ -135,6 +135,15 @@ async function createOrder(product, buyerAddress) {
   return body.order;
 }
 
+async function usdcBalance(address) {
+  return publicClient.readContract({
+    address: USDC,
+    abi: erc20Abi,
+    functionName: "balanceOf",
+    args: [address],
+  });
+}
+
 async function pay(buyer, depositAddress, amount) {
   const walletClient = createWalletClient({
     account: buyer,
@@ -142,6 +151,7 @@ async function pay(buyer, depositAddress, amount) {
     transport: http(RPC_URL),
   });
   const fromBlock = await publicClient.getBlockNumber();
+  const before = await usdcBalance(depositAddress);
   const hash = await walletClient.writeContract({
     address: USDC,
     abi: erc20Abi,
@@ -163,6 +173,8 @@ async function pay(buyer, depositAddress, amount) {
       log.args.value === amount
   );
   assert.ok(match, `no USDC Transfer ${hash} to ${depositAddress}`);
+  const after = await usdcBalance(depositAddress);
+  assert.equal(after - before, amount);
   return hash;
 }
 
