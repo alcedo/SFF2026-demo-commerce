@@ -133,12 +133,12 @@ for (const [slug, face] of Object.entries(FACES)) {
     fail(`API missing product ${slug}`);
     continue;
   }
-  const want = expectedUsd(face);
-  if (product.usdValue !== want) {
-    fail(`${slug} API usdValue must be ${want}, got ${product.usdValue}`);
+  const wantMicro = expectedMicro(face);
+  if (Math.round(product.usdValue * 1e6) !== wantMicro) {
+    fail(`${slug} API usdValue must be ${expectedUsd(face)}, got ${product.usdValue}`);
   }
-  if (product.priceUsdc !== want) {
-    fail(`${slug} API priceUsdc must be ${want}, got ${product.priceUsdc}`);
+  if (Math.round(product.priceUsdc * 1e6) !== wantMicro) {
+    fail(`${slug} API priceUsdc must be ${expectedUsd(face)}, got ${product.priceUsdc}`);
   }
 }
 
@@ -152,9 +152,9 @@ const orderData = await orderRes.json();
 if (!orderRes.ok || !orderData.order) {
   fail(`POST /api/orders failed: ${orderData.error ?? orderRes.status}`);
 } else {
-  const want = expectedUsd(FACES.amazon) * 3;
-  if (orderData.order.amountUsdc !== want) {
-    fail(`qty-3 amazon amountUsdc must be ${want}, got ${orderData.order.amountUsdc}`);
+  const wantMicro = expectedMicro(FACES.amazon) * 3;
+  if (Math.round(orderData.order.amountUsdc * 1e6) !== wantMicro) {
+    fail(`qty-3 amazon amountUsdc must be ${formatFromMicro(wantMicro)}, got ${orderData.order.amountUsdc}`);
   }
   const label = orderData.order.amountLabel ?? "";
   if (!label.startsWith(formatFromMicro(expectedMicro(FACES.amazon) * 3))) {

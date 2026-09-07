@@ -31,7 +31,7 @@ export type CatalogProduct = {
   redeemSteps: string[];
 };
 
-export const TESTNET_VALUE_SCALE = 0.001; // 0.1% of original face
+export const TESTNET_VALUE_SCALE = 0.001;
 
 export const CATALOG: CatalogProduct[] = [
   {

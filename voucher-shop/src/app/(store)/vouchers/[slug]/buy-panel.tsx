@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { IconBan, IconClock, IconGlobe } from "@/components/icons";
+import { formatUsdc, toMicroUsdc } from "@/lib/config";
 import type { PublicProduct } from "@/lib/order-view";
 
 export function BuyPanel({ product }: { product: PublicProduct }) {
@@ -11,7 +12,7 @@ export function BuyPanel({ product }: { product: PublicProduct }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const max = Math.min(10, Math.max(1, product.available));
-  const total = product.priceUsdc * quantity;
+  const totalLabel = `${formatUsdc(toMicroUsdc(product.priceUsdc) * BigInt(quantity))} USDC`;
 
   function bump(delta: number) {
     setQuantity((value) => Math.min(max, Math.max(1, value + delta)));
@@ -61,7 +62,7 @@ export function BuyPanel({ product }: { product: PublicProduct }) {
 
       <div className="panel mt-4 flex items-center justify-between px-4 py-3 text-sm">
         <span className="eyebrow text-muted">Total</span>
-        <span className="font-black text-green-hi">{total} USDC</span>
+        <span className="font-black text-green-hi">{totalLabel}</span>
       </div>
 
       <button
@@ -70,7 +71,7 @@ export function BuyPanel({ product }: { product: PublicProduct }) {
         disabled={loading || product.available < 1}
         className="btn btn-primary mt-4 h-12 w-full"
       >
-        {loading ? "Creating order..." : `Buy now · ${total} USDC`}
+        {loading ? "Creating order..." : `Buy now · ${totalLabel}`}
       </button>
       {error ? <p className="mt-3 text-sm text-danger">{error}</p> : null}
     </div>
