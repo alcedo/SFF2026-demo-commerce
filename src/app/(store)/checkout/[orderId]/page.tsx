@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { CopyButton } from "@/components/copy-button";
 import { GiftCardArt } from "@/components/gift-card-art";
 import { Spinner } from "@/components/icons";
+import { PUBLIC_DEMO_AUTO_PAY } from "@/lib/public-flags";
 import type { PublicOrder } from "@/lib/order-view";
 
 export default function CheckoutPage() {
@@ -63,23 +64,43 @@ export default function CheckoutPage() {
       </div>
 
       <div className="mt-8">
-        <p className="font-medium">
-          1. Send {order.amountUsdc.toFixed(2)} USDC to the address below (Use Sepolia testnet)
-        </p>
-        <div className="panel mt-3 flex items-center gap-2 px-3 py-3 font-mono text-xs sm:text-sm">
-          <span className="flex-1 break-all text-paper">{order.merchantAddress}</span>
-          <CopyButton value={order.merchantAddress} />
-        </div>
-        <p className="mt-6">2. We detect your payment automatically. This usually takes 10-30 seconds.</p>
+        {PUBLIC_DEMO_AUTO_PAY ? (
+          <>
+            <p className="font-medium">
+              This playground confirms the order in about eight seconds. You do not need to send USDC.
+            </p>
+            <p className="mt-4 text-sm text-muted">
+              Optional. Send {order.amountUsdc.toFixed(2)} USDC on Sepolia to{" "}
+              {order.merchantAddress} if you want to exercise the real rail.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="font-medium">
+              1. Send {order.amountUsdc.toFixed(2)} USDC to the address below (Use Sepolia testnet)
+            </p>
+            <div className="panel mt-3 flex items-center gap-2 px-3 py-3 font-mono text-xs sm:text-sm">
+              <span className="flex-1 break-all text-paper">{order.merchantAddress}</span>
+              <CopyButton value={order.merchantAddress} />
+            </div>
+            <p className="mt-6">2. We detect your payment automatically. This usually takes 10-30 seconds.</p>
+          </>
+        )}
       </div>
 
-      <div className="panel mt-6 border-warning/30 px-4 py-3 text-sm text-warning">
-        Send only USDC on Sepolia testnet. Other tokens will not be detected.
-      </div>
+      {PUBLIC_DEMO_AUTO_PAY ? null : (
+        <div className="panel mt-6 border-warning/30 px-4 py-3 text-sm text-warning">
+          Send only USDC on Sepolia testnet. Other tokens will not be detected.
+        </div>
+      )}
 
       <div className="panel mt-6 flex items-center gap-3 px-4 py-5 text-sm text-muted">
         <Spinner />
-        <span>Waiting for payment... We confirm your payment automatically.</span>
+        <span>
+          {PUBLIC_DEMO_AUTO_PAY
+            ? "Waiting for the demo confirm..."
+            : "Waiting for payment... We confirm your payment automatically."}
+        </span>
       </div>
 
       {error ? <p className="mt-4 text-sm text-danger">{error}</p> : null}

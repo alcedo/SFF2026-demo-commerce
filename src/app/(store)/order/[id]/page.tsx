@@ -11,22 +11,42 @@ export default function VoucherDisplayPage() {
   const [order, setOrder] = useState<PublicOrder | null>(null);
 
   useEffect(() => {
-    fetch(`/api/orders/${params.id}`)
-      .then((res) => res.json())
-      .then((data: { order?: PublicOrder }) => setOrder(data.order ?? null));
+    let active = true;
+    let timer = 0;
+    async function load() {
+      const res = await fetch(`/api/orders/${params.id}`);
+      const data = (await res.json()) as { order?: PublicOrder };
+      if (!active) return;
+      setOrder(data.order ?? null);
+      if (data.order?.status === "paid" && timer) window.clearInterval(timer);
+    }
+    load();
+    timer = window.setInterval(load, 2000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
   }, [params.id]);
 
   if (!order) {
     return <div className="px-4 py-16 text-center text-muted">Loading...</div>;
   }
 
-  const count = order.voucherCodes.length || order.quantity;
+  const ready = order.status === "paid" && order.voucherCodes.length > 0;
+  const count = order.voucherCodes.length;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
-      <div className="panel border-green/40 bg-[rgba(0,255,153,0.08)] px-4 py-3 text-sm text-green-hi">
-        Your vouchers are ready! Here {count === 1 ? "is your voucher code" : `are your ${count} voucher codes`}.
-        Copy each code and redeem on the respective platform.
+      <div
+        className={
+          ready
+            ? "panel border-green/40 bg-[rgba(0,255,153,0.08)] px-4 py-3 text-sm text-green-hi"
+            : "panel px-4 py-3 text-sm text-muted"
+        }
+      >
+        {ready
+          ? `Your vouchers are ready. Here ${count === 1 ? "is your voucher code" : `are your ${count} voucher codes`}. Copy each code and redeem on the brand site.`
+          : "Payment is still pending. Codes stay hidden until the order is paid."}
       </div>
 
       <div className="mt-6 flex items-center gap-3">

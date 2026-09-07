@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { PUBLIC_DEMO_AUTO_PAY } from "@/lib/public-flags";
 import { AgentixMark } from "./agentix-mark";
 
 const links = [
@@ -44,7 +45,9 @@ export function SiteHeader() {
         </nav>
         <div className="hidden items-center gap-2 sm:flex">
           <span className="glow-dot" />
-          <span className="eyebrow text-[10px] text-muted">Live · Sepolia</span>
+          <span className="eyebrow text-[10px] text-muted">
+            {PUBLIC_DEMO_AUTO_PAY ? "Demo · Sepolia" : "Live · Sepolia"}
+          </span>
         </div>
       </div>
     </header>
