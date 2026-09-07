@@ -21,7 +21,10 @@ export function CheckoutView({ order }: { order: PublicOrder }) {
       if (inflight) return;
       inflight = true;
       try {
-        const res = await fetch(`/api/orders/${order.id}`, { method: "POST" });
+        const res = await fetch(`/api/orders/${order.id}`, {
+          method: "POST",
+          signal: AbortSignal.timeout(12_000),
+        });
         const data = (await res.json()) as { order?: PublicOrder };
         if (!active) return;
         if (data.order?.status === "paid") {

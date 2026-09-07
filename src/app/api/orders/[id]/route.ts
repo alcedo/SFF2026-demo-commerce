@@ -3,6 +3,8 @@ import { getOrder } from "@/lib/db";
 import { toPublicOrder } from "@/lib/order-view";
 import { detectAndFulfill } from "@/lib/payment";
 
+export const maxDuration = 15;
+
 async function detectOrder(id: string) {
   const order = await getOrder(id);
   if (!order) {

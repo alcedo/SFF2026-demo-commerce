@@ -3,6 +3,8 @@ import { createOrder, getOrder, getProduct, getProductBySlug } from "@/lib/db";
 import { toPublicOrder } from "@/lib/order-view";
 import { reconcileAgedInvoices } from "@/lib/payment";
 
+export const maxDuration = 15;
+
 export async function POST(request: NextRequest) {
   const body = (await request.json()) as Record<string, unknown>;
   const quantity = Number(body.quantity ?? 1);

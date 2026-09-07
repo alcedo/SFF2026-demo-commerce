@@ -4,6 +4,8 @@ import { orderDepositAddress } from "@/lib/order-deposit";
 import { toPublicOrder } from "@/lib/order-view";
 import { verifyUsdcPayment } from "@/lib/payment";
 
+export const maxDuration = 15;
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

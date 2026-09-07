@@ -1,10 +1,7 @@
-import { createPublicClient, fallback, http, parseAbiItem } from "viem";
 import {
-  CHAIN,
   DEMO_AUTO_PAY,
   DEMO_AUTO_PAY_MS,
   ORDER_TTL_MS,
-  RPC_URL,
   USDC_ADDRESS,
 } from "./config";
 import {
@@ -19,26 +16,21 @@ import {
 } from "./db";
 import { orderDepositAddress } from "./order-deposit";
 import { demoTxHash } from "./order-token";
+import {
+  sepoliaGetLogs,
+  sepoliaRpc,
+  type RpcReceipt,
+} from "./sepolia-rpc";
+import {
+  decodeUsdcTransfer,
+  paddedAddress,
+  TRANSFER_TOPIC,
+} from "./usdc-log";
 import { matchUnusedTransfer } from "./usdc-transfer";
 
-const RPC_URLS = [
-  ...new Set([
-    RPC_URL,
-    "https://ethereum-sepolia-rpc.publicnode.com",
-    "https://1rpc.io/sepolia",
-  ]),
-];
-
-const publicClient = createPublicClient({
-  chain: CHAIN,
-  transport: fallback(
-    RPC_URLS.map((url) => http(url, { timeout: 8_000, retryCount: 1 }))
-  ),
-});
-
-const transferEvent = parseAbiItem(
-  "event Transfer(address indexed from, address indexed to, uint256 value)"
-);
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export async function verifyUsdcPayment(input: {
   txHash: `0x${string}`;
@@ -47,39 +39,36 @@ export async function verifyUsdcPayment(input: {
   buyerAddress?: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
-    const receipt =
-      (await publicClient.getTransactionReceipt({ hash: input.txHash }).catch(() => null)) ??
-      (await publicClient.waitForTransactionReceipt({
-        hash: input.txHash,
-        confirmations: 1,
-        timeout: 12_000,
-      }));
+    let receipt =
+      (await sepoliaRpc<RpcReceipt | null>("eth_getTransactionReceipt", [
+        input.txHash,
+      ]).catch(() => null)) ?? null;
+    if (!receipt) {
+      await sleep(1_500);
+      receipt = await sepoliaRpc<RpcReceipt | null>("eth_getTransactionReceipt", [
+        input.txHash,
+      ]);
+    }
 
-    if (receipt.status !== "success") {
+    if (!receipt || receipt.status !== "0x1") {
       return { ok: false, error: "Transaction failed on chain" };
     }
 
-    const logs = await publicClient.getLogs({
-      address: USDC_ADDRESS,
-      event: transferEvent,
-      fromBlock: receipt.blockNumber,
-      toBlock: receipt.blockNumber,
-    });
-
-    const match = logs.find((log) => {
-      if (log.transactionHash.toLowerCase() !== input.txHash.toLowerCase()) {
-        return false;
-      }
-      const to = log.args.to?.toLowerCase();
-      const from = log.args.from?.toLowerCase();
-      const value = log.args.value;
-      if (to !== input.depositAddress.toLowerCase()) return false;
-      if (value !== input.expectedAmountMicro) return false;
-      if (input.buyerAddress && from !== input.buyerAddress.toLowerCase()) {
-        return false;
-      }
-      return true;
-    });
+    const match = receipt.logs
+      .map(decodeUsdcTransfer)
+      .find((log) => {
+        if (!log) return false;
+        if (log.tx.toLowerCase() !== input.txHash.toLowerCase()) return false;
+        if (log.to !== input.depositAddress.toLowerCase()) return false;
+        if (log.value !== input.expectedAmountMicro) return false;
+        if (
+          input.buyerAddress &&
+          log.from !== input.buyerAddress.toLowerCase()
+        ) {
+          return false;
+        }
+        return true;
+      });
 
     if (!match) {
       return {
@@ -101,29 +90,28 @@ export async function findIncomingUsdcTransfer(input: {
   depositAddress: `0x${string}`;
 }): Promise<`0x${string}` | null> {
   try {
-    const latest = await publicClient.getBlockNumber();
+    const latestHex = await sepoliaRpc<string>("eth_blockNumber", []);
+    const latest = BigInt(latestHex);
     const lookback = BigInt(Math.max(80, Math.ceil(ORDER_TTL_MS / 12_000) + 40));
     const fromBlock = latest > lookback ? latest - lookback : BigInt(0);
-    const chunk = BigInt(30);
-    const logs = [];
+    const chunk = BigInt(80);
+    const mapped: { value: bigint; tx: `0x${string}` }[] = [];
     for (let toBlock = latest; toBlock >= fromBlock; ) {
-      const start = toBlock >= fromBlock + chunk ? toBlock - chunk + BigInt(1) : fromBlock;
-      const batch = await publicClient.getLogs({
+      const start =
+        toBlock >= fromBlock + chunk ? toBlock - chunk + BigInt(1) : fromBlock;
+      const batch = await sepoliaGetLogs({
         address: USDC_ADDRESS,
-        event: transferEvent,
-        args: { to: input.depositAddress },
+        topics: [TRANSFER_TOPIC, null, paddedAddress(input.depositAddress)],
         fromBlock: start,
         toBlock,
       });
-      logs.push(...batch);
+      for (const log of batch) {
+        const decoded = decodeUsdcTransfer(log);
+        if (decoded) mapped.push({ value: decoded.value, tx: decoded.tx });
+      }
       if (start === fromBlock) break;
       toBlock = start - BigInt(1);
     }
-    const mapped = logs.flatMap((log) =>
-      log.args.value === undefined
-        ? []
-        : [{ value: log.args.value, tx: log.transactionHash }]
-    );
     const used = new Set(
       (
         await Promise.all(

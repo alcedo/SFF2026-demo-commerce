@@ -14,7 +14,7 @@
     "test:e2e:ten": "node --env-file=config/test-wallets.env --env-file=config/anvil.env scripts/e2e-ten-buyers.mjs",
     "test:live": "node --env-file=config/test-wallets.env scripts/live-sepolia-purchase.mjs",
     "verify:purchase": "node scripts/verify-purchase.mjs",
-    "test": "node --experimental-strip-types --test src/lib/order-deposit.test.ts src/lib/neon.test.ts"
+    "test": "node --experimental-strip-types --test src/lib/order-deposit.test.ts src/lib/neon.test.ts src/lib/usdc-log.test.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
