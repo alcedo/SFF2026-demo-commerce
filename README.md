@@ -48,8 +48,10 @@ With the app running:
 npm run verify:purchase
 ```
 
-With an Anvil Sepolia fork:
+With an Anvil Sepolia fork on port 8545, and `.env.local` pointed at that RPC:
 
 ```bash
+anvil --fork-url https://ethereum-sepolia-rpc.publicnode.com --port 8545 --chain-id 11155111
+# set SEPOLIA_RPC_URL=http://127.0.0.1:8545 in .env.local
 npm run test:e2e
 ```

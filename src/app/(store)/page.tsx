@@ -3,6 +3,7 @@ import { GiftCardArt } from "@/components/gift-card-art";
 import { IconBolt, IconClock, IconShield } from "@/components/icons";
 import { VoucherCard } from "@/components/voucher-card";
 import { POPULAR_SLUGS } from "@/lib/catalog";
+import { DEMO_AUTO_PAY } from "@/lib/config";
 import { listProducts } from "@/lib/db";
 import { toPublicProduct } from "@/lib/order-view";
 
@@ -24,7 +25,9 @@ const features = [
   {
     n: "03",
     title: "Trusted checks",
-    body: "On-chain transfer verification before reveal.",
+    body: DEMO_AUTO_PAY
+      ? "This playground confirms a demo buy in a few seconds. Real USDC checks stay available."
+      : "On-chain transfer verification before reveal.",
     icon: IconShield,
   },
 ];
@@ -50,8 +53,9 @@ export default function HomePage() {
               <span className="block text-green-hi">with stablecoin.</span>
             </h1>
             <p className="mt-5 max-w-lg text-sm leading-7 text-muted md:text-base">
-              Fast, simple, and on-chain. Pay with USDC on Sepolia and receive
-              voucher codes the moment the transfer confirms.
+              {DEMO_AUTO_PAY
+                ? "Walk the catalog and checkout on Sepolia rails. This demo confirms a purchase in about eight seconds so you can see the codes without a wallet."
+                : "Pay with USDC on Sepolia and receive voucher codes when the transfer confirms."}
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               {tags.map((tag) => (
