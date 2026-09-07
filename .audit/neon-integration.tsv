@@ -22,3 +22,5 @@ ts	phase	decision	why	evidence	result
 2026-09-07T13:02:00Z	bug	Preview POST /api/orders 400 MERCHANT_PRIVATE_KEY must be a 32-byte hex key	New Vercel project has Neon, not the HD seed; createOrder wrote then toPublicOrder threw	health merchantKeySource demo fallback; fail before reserve	open
 2026-09-07T13:10:38Z	bug	Preview POST /api/orders 504 Task timed out after 300 seconds	detectAndFulfill getLogs on public Sepolia RPC before demo auto-pay	skip chain when DEMO_AUTO_PAY; 8s RPC timeout	open
 2026-09-07T13:19:00Z	vercel	User set MERCHANT_PRIVATE_KEY on the Vercel project	Existing Preview dpl_6iXBYuPMDwmNNjuBYk4teFZZwhag was built before the var; health still merchantKeySource demo	redeploy Preview so serverless sees the key	open
+2026-09-07T13:21:26Z	verify	Preview dpl_2sA2VH7E4STCtYZys4BvusPjy9tn health merchantKey true source env; POST /api/orders 200 amazon qty 1 paid with 1 code	User set MERCHANT_PRIVATE_KEY; redeploy fb69d4d skipped demo getLogs	runtime 200; browser success + order reveal	VERIFIED preview-checkout
+
