@@ -13,3 +13,4 @@ ts	phase	decision	why	evidence	result
 2026-09-07T05:47:20Z	verify	Qty-3 Amazon auto-pay yields 3 codes on the production build	Prove the purchase loop before pushing	npm run start && npm run verify:purchase amazon.3.1788760015682.68e3cf3a3bf3d9c4	VERIFIED
 2026-09-07T05:50:03Z	verify	Production storefront fulfills qty-3 Amazon	Prove the live Vercel URL, not the SSO preview	https://sff-2026-demo-commerce.vercel.app npm run verify:purchase amazon.3.1788760183221.1aa9f5e6b62dbe1b	VERIFIED
 2026-09-07T05:50:03Z	frame	Close the deploy predicate	Homepage 200 and purchase loop green on production after merge	https://github.com/alcedo/SFF2026-demo-commerce/pull/1 https://sff-2026-demo-commerce.vercel.app	VERIFIED
+2026-09-07T05:51:29Z	fix	Extract tryWriteSnapshot so memory fallback needs no comment	Comment Sicko flagged the silent catch as an alibi	src/lib/db.ts writeState	done
