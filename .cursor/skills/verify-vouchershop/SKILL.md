@@ -21,7 +21,7 @@ Primary surface: the Next.js web UI.
 
 Secondary surface: same-origin JSON APIs used by the UI (`/api/products`, `/api/orders`, `/api/orders/:id`, `/api/admin/*`). Use APIs to confirm side effects, not as a substitute for a mapped browser path.
 
-Not a user surface: `npm run verify:purchase` (HTTP-only demo fulfill), `npm run test:e2e` (Anvil + real USDC). Those scripts do not click the storefront.
+Not a user surface: `npm run verify:purchase` (HTTP-only demo fulfill, qty 3 on one order), `npm run verify:concurrent` (three parallel qty-1 orders, unique deposit wallets), `npm run test:e2e` (Anvil + real USDC). Those scripts do not click the storefront.
 
 ## Launch
 
@@ -127,7 +127,7 @@ Proof standards:
 - Capture the action and the resulting screen (ARIA snapshot + screenshot). A final URL is not enough.
 - Confirm side effects in JSON: pending orders have `voucherCodes: []`; paid orders have one code per quantity; demo `txHash` is `0x` + sha256(`demo:${orderId}`).
 - Demo auto-pay skips the wallet. Prove the skip by watching checkout say you do not need to send USDC, then seeing pay without a tx from a wallet, then checking that `txHash` matches the demo digest — not by trusting the env name.
-- `npm run verify:purchase` is a useful HTTP smoke (3× Amazon = 0.075 USDC, codes hidden until paid). It is not a mapped UI proof.
+- `npm run verify:purchase` is a useful HTTP smoke (3× Amazon = 0.075 USDC, codes hidden until paid). It is not a mapped UI proof. `npm run verify:concurrent` is the three-order uniqueness check (three qty-1 creates in `Promise.all`, three distinct `merchantAddress` values). It is also not a mapped UI proof.
 
 Minimum files for a feature proof:
 

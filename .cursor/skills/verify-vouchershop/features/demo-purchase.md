@@ -45,7 +45,7 @@ Preconditions:
 - Checkout uses `NEXT_PUBLIC_DEMO_AUTO_PAY` for the no-wallet copy. Server fulfill uses `DEMO_AUTO_PAY` / `NEXT_PUBLIC_DEMO_AUTO_PAY`. Isolated launch sets both to `1`. A hand-started app with only one of them set will lie on one side.
 - Processing is a timed animation after pay. Do not treat `Detecting your payment...` as unpaid.
 - Quantity max is `min(10, available)`. An empty SKU disables buy.
-- `npm run verify:purchase` buys qty 3 over HTTP (0.075 USDC). That is not this recipe and it does not prove the buttons.
+- `npm run verify:purchase` buys qty 3 over HTTP (0.075 USDC). That is not this recipe and it does not prove the buttons. `npm run verify:concurrent` fires three qty-1 orders at once and checks distinct deposit addresses. That is also not this recipe.
 - Success `View my voucher` vs `View my vouchers` depends on quantity.
 - Order ids are signed `slug.qty.timestamp.derivationIndex.hmac` (five parts). A four-part id or a UUID 404s.
 - `← Cancel and go back` expires a pending invoice. After auto-pay it returns 409 `Order already paid` — cancel in the same turn as checkout, not after reading the page.
