@@ -44,6 +44,6 @@ Keep implementation details out of the map. Name only user paths, stable handles
 ## Features
 
 - [Browse the catalog](./catalog.md) covers home popular cards, the full grid, search, category filter, and a product page.
-- [Buy with demo auto-pay](./demo-purchase.md) covers quantity, checkout, the eight-second confirm, receipt, and code reveal.
+- [Buy with demo auto-pay](./demo-purchase.md) covers quantity, checkout, cancel, the eight-second confirm, receipt, and code reveal.
 - [Redeem help](./redeem-help.md) covers How it works and the `/redeem` redirect.
 - [Admin inventory](./admin-inventory.md) covers login, dashboard counts, adding a code, and filtering.

@@ -32,7 +32,7 @@ Preconditions:
 - **Good login.** Fill username `admin`, password `admin123`. Choose `Login`. The heading is `Dashboard`. Cards `Total Vouchers`, `Available`, `Used`, and `Expired` are visible. Used is at least 1 (seeded Amazon used code). Expired is at least 1 (seeded Netflix expired code).
 - **Settings.** Choose `Settings`. `Demo auto-detect` is `On`. `Admin username` is `admin`. `Network` is `Sepolia`.
 - **Add stock.** Choose `Vouchers`. Heading is `Manage vouchers`. Choose `+ Add voucher`. In the dialog heading `Add voucher`, keep product `Amazon Gift Card (0.025 USDC)`, type `VERIFY-<run-id>-AMZ` into `Codes (one per line)`, choose `Add`. The page shows `Added 1 voucher(s).` and the table contains that code with status `available`.
-- **Filter.** Set status to `available`, type `VERIFY-<run-id>-AMZ` into `Search codes`, choose `Filter`. The table includes that code and does not include the seeded `used` Amazon code.
+- **Filter.** Set the status `<select>` to `Available`, type `VERIFY-<run-id>-AMZ` into `Search codes`, choose `Filter`. The table includes that code and does not include the seeded `used` Amazon code.
 - **Usage.** Choose `Usage History`. Choose `View` on the `VERIFY-<run-id>-AMZ` row. Heading is `Voucher usage`. Status is `available`.
 - **Logout.** Choose `Logout`. The login heading returns. `/admin` redirects to login again.
 - **Proof.** After a successful add, capture `$EVIDENCE/admin-inventory/vouchers.aria.txt` and `$EVIDENCE/admin-inventory/vouchers.png` on `/admin/vouchers?q=VERIFY-<run-id>-AMZ`. Both show `Manage vouchers` and the unique code.
@@ -42,6 +42,6 @@ Preconditions:
 - Username and password labels are not `htmlFor`-linked. `getByLabel('Username')` is unreliable. Use the `autocomplete` attributes.
 - `/admin/login` has no storefront header. Brand text is still `AgentiX` / `Admin` after login, in the sidebar.
 - Duplicate codes error with `Code already exists: …`. Always use a unique `VERIFY-` prefix.
-- Adding stock without an isolated launch writes the repo `data/vouchershop.json`. Prefer default `launch`.
+- Adding stock without an isolated launch writes the repo `data/vouchershop.json` (or Neon, if `DATABASE_URL` is set). Prefer default `launch`, which blanks that URL.
 - Dashboard counts include reserved/sold in Total but the four big numbers are total / available / used / expired only.
 - Settings are read-only. Changing `.env.local` requires a restart; this recipe does not edit env.

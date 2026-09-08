@@ -45,7 +45,7 @@ Verification start (isolated scratch, pinned port). Do this instead of attaching
 
 Ready when the command exits 0 and prints a `url`. Default URL is `http://127.0.0.1:4173`. State is `/tmp/vouchershop-verify/current.json`.
 
-`launch` copies the app (including `node_modules`, because Turbopack rejects an out-of-tree symlink) into `/tmp/vouchershop-verify/runs/<run-id>/app`, writes a demo `.env.local` (no wallet keys), and starts `next dev --hostname 127.0.0.1 --port 4173` from that copy. Shop state lives in the copy's `data/vouchershop.json`, not the repo's.
+`launch` copies the app (including `node_modules`, because Turbopack rejects an out-of-tree symlink) into `/tmp/vouchershop-verify/runs/<run-id>/app`, writes a demo `.env.local` (no wallet keys; `DATABASE_URL` and `POSTGRES_URL*` are blank so the copy never attaches to Neon), and starts `next dev --hostname 127.0.0.1 --port 4173` from that copy. Shop state lives in the copy's `data/vouchershop.json`, not the repo's. The child env also blanks those DB URLs so a host `.env` cannot leak into the scratch process.
 
 `--in-place` starts from the repo cwd and will read/write `data/vouchershop.json` there. Use it only when you own that tree.
 
@@ -94,6 +94,7 @@ Stable handles (current copy):
 | Quantity | buttons whose text is `−` and `+` |
 | Checkout heading | `getByRole('heading', { name: 'Complete your purchase' })` |
 | Demo wait copy | `Waiting for the demo confirm...` |
+| Cancel checkout | `getByRole('button', { name: '← Cancel and go back' })` |
 | Success heading | `getByRole('heading', { name: 'Payment successful' })` |
 | Reveal codes | `getByRole('link', { name: 'View my voucher' })` (plural when qty > 1) |
 | Admin login heading | `getByRole('heading', { name: 'Admin login' })` |
@@ -109,9 +110,10 @@ HTTP side effects (after a UI action, or to poll pay):
 ```bash
 .cursor/skills/verify-vouchershop/scripts/control-vouchershop http GET /api/products
 .cursor/skills/verify-vouchershop/scripts/control-vouchershop wait-paid --order-id '<id>'
+.cursor/skills/verify-vouchershop/scripts/control-vouchershop demo-digest --order-id '<id>'
 ```
 
-Order ids look like `amazon.1.<epochMs>.<16 hex hmac>`, not a UUID.
+Order ids look like `amazon.1.<epochMs>.<derivationIndex>.<16 hex hmac>` (five dotted parts), not a UUID.
 
 Default credentials: `admin` / `admin123` (`ADMIN_USERNAME` / `ADMIN_PASSWORD`).
 
@@ -149,7 +151,7 @@ Run cleanup after every failed iteration and after the last drive. Confirm evide
 
 ## Isolate
 
-Two Next processes that share a cwd share `data/vouchershop.json` and will corrupt each other's stock and orders. Isolated `launch` (the default) is the only supported way to run beside a human `:3000`.
+Two Next processes that share a cwd share `data/vouchershop.json` and will corrupt each other's stock and orders. Isolated `launch` (the default) is the only supported way to run beside a human `:3000`. When `DATABASE_URL` is set, the app persists on Neon instead of that JSON file — isolated launch clears the URL so a verify run cannot write production stock.
 
 If doctor did not start this instance, do not drive it unless the operator explicitly owns that URL and doctor still passes.
 
@@ -163,6 +165,7 @@ All helpers are executable. Invoke them from the repo root as shown.
 .cursor/skills/verify-vouchershop/scripts/control-vouchershop http GET /api/products [--out file]
 .cursor/skills/verify-vouchershop/scripts/control-vouchershop http POST /api/admin/login '{"username":"admin","password":"admin123"}'
 .cursor/skills/verify-vouchershop/scripts/control-vouchershop wait-paid --order-id '<id>'
+.cursor/skills/verify-vouchershop/scripts/control-vouchershop demo-digest --order-id '<id>'
 .cursor/skills/verify-vouchershop/scripts/control-vouchershop save-html / [--out file]
 .cursor/skills/verify-vouchershop/scripts/control-vouchershop cleanup
 ```
