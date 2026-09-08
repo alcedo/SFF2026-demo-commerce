@@ -48,7 +48,10 @@ With the app running:
 
 ```bash
 npm run verify:purchase
+npm run verify:concurrent
 ```
+
+`verify:purchase` buys quantity 3 on one Amazon order. `verify:concurrent` fires three quantity-1 Amazon orders at the same time and fails unless each order gets a distinct deposit address.
 
 With an Anvil Sepolia fork on port 8545, and `.env.local` pointed at that RPC:
 
