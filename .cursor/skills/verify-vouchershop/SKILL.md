@@ -65,7 +65,7 @@ Doctor is read-only. It passes only when all of these hold:
 
 - `GET $URL/` is 200
 - HTML contains `AgentiX` and `Buy digital vouchers`
-- `GET $URL/api/products` is 200 and includes `slug: "amazon"` at `25` USDC
+- `GET $URL/api/products` is 200 and includes `slug: "amazon"` at `0.025` USDC
 - If `/tmp/vouchershop-verify/current.json` exists: that PID is alive and its `url` matches `$URL`
 
 If demo auto-pay is on, the home HTML also contains `eight seconds` and the header chip `Demo · Sepolia`. If those strings are missing, the instance is not the default verify profile — do not run demo-purchase against it.

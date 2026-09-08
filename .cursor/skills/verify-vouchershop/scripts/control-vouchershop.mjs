@@ -143,7 +143,9 @@ async function cmdDoctor(flags) {
       const body = JSON.parse(products.text);
       const amazon = (body.products ?? []).find((item) => item.slug === "amazon");
       if (!amazon) failures.push("products missing amazon");
-      else if (amazon.priceUsdc !== 25) failures.push(`amazon price ${amazon.priceUsdc}, expected 25`);
+      else if (amazon.priceUsdc !== 0.025) {
+        failures.push(`amazon price ${amazon.priceUsdc}, expected 0.025`);
+      }
     }
   }
 
