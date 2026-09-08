@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createOrder, getOrder, getProduct, getProductBySlug } from "@/lib/db";
+import {
+  createOrder,
+  expireAgedInvoices,
+  getOrder,
+  getProduct,
+  getProductBySlug,
+} from "@/lib/db";
 import { toPublicOrder } from "@/lib/order-view";
-import { reconcileAgedInvoices } from "@/lib/payment";
 
 export async function POST(request: NextRequest) {
   const body = (await request.json()) as Record<string, unknown>;
@@ -16,7 +21,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await reconcileAgedInvoices();
+    await expireAgedInvoices();
     const order = await createOrder({
       productId: product.id,
       quantity,

@@ -1,25 +1,20 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { CopyButton } from "@/components/copy-button";
 import { IconCheck } from "@/components/icons";
 import { formatDateTime, NETWORK_NAME, truncateHex } from "@/lib/config";
-import type { PublicOrder } from "@/lib/order-view";
+import { loadPublicOrder } from "@/lib/order-view";
 
-export default function SuccessPage() {
-  const params = useParams<{ orderId: string }>();
-  const [order, setOrder] = useState<PublicOrder | null>(null);
-
-  useEffect(() => {
-    fetch(`/api/orders/${params.orderId}`)
-      .then((res) => res.json())
-      .then((data: { order?: PublicOrder }) => setOrder(data.order ?? null));
-  }, [params.orderId]);
-
-  if (!order) {
-    return <div className="px-4 py-16 text-center text-muted">Loading...</div>;
+export default async function SuccessPage({
+  params,
+}: {
+  params: Promise<{ orderId: string }>;
+}) {
+  const { orderId } = await params;
+  const order = await loadPublicOrder(orderId);
+  if (!order) notFound();
+  if (order.status !== "paid") {
+    redirect(`/checkout/${order.id}`);
   }
 
   const voucherWord = order.quantity === 1 ? "voucher is" : "vouchers are";

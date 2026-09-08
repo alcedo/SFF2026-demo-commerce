@@ -3,7 +3,27 @@ import { getOrder } from "@/lib/db";
 import { toPublicOrder } from "@/lib/order-view";
 import { detectAndFulfill } from "@/lib/payment";
 
+export const maxDuration = 15;
+
 export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const order = await getOrder(id);
+  if (!order) {
+    return NextResponse.json({ error: "Order not found" }, { status: 404 });
+  }
+  try {
+    return NextResponse.json({ order: await toPublicOrder(order) });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Could not load order";
+    const status = message.includes("MERCHANT_PRIVATE_KEY") ? 503 : 400;
+    return NextResponse.json({ error: message }, { status });
+  }
+}
+
+export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {

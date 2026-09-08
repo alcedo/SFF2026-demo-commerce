@@ -73,7 +73,7 @@ describe("orderDepositAddress", () => {
 });
 
 describe("allocateHdIndex", () => {
-  it("reuses the smallest index that is not pending or paid", () => {
+  it("keeps expired indexes held so a late Transfer cannot collide", () => {
     assert.equal(allocateHdIndex([]), 0);
     assert.equal(allocateHdIndex([0, 1, 2]), 3);
     assert.equal(
@@ -84,7 +84,7 @@ describe("allocateHdIndex", () => {
           { status: "pending", derivation_index: 2 },
         ])
       ),
-      1
+      3
     );
   });
 });

@@ -74,6 +74,11 @@ export function heldDerivationIndices(
   orders: { status: string; derivation_index: number }[]
 ): number[] {
   return orders
-    .filter((order) => order.status === "pending" || order.status === "paid")
+    .filter(
+      (order) =>
+        order.status === "pending" ||
+        order.status === "paid" ||
+        order.status === "expired"
+    )
     .map((order) => order.derivation_index);
 }

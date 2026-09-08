@@ -110,7 +110,7 @@ const DDL = [
   `CREATE INDEX IF NOT EXISTS orders_status_idx ON orders (status)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS orders_live_hd_idx
      ON orders (derivation_index)
-     WHERE status IN ('pending', 'paid')`,
+     WHERE status IN ('pending', 'paid', 'expired')`,
   `CREATE OR REPLACE FUNCTION reserve_shop_order(
      p_id TEXT,
      p_product_id INTEGER,
@@ -155,6 +155,7 @@ const DDL = [
 
 async function applySchema() {
   const sql = getSql();
+  await sql.query(`DROP INDEX IF EXISTS orders_live_hd_idx`);
   for (const statement of DDL) {
     await sql.query(statement);
   }
@@ -293,7 +294,7 @@ export async function neonHeldIndexes(): Promise<number[]> {
   const rows = await getSql()`
     SELECT derivation_index
       FROM orders
-     WHERE status IN ('pending', 'paid')
+     WHERE status IN ('pending', 'paid', 'expired')
   `;
   return rows.map((row) => Number((row as { derivation_index: number }).derivation_index));
 }
@@ -357,6 +358,67 @@ export async function neonExpireOrder(orderId: string): Promise<boolean> {
     `,
   ]);
   return orders.length > 0;
+}
+
+export async function neonApplyVerifiedPayment(
+  orderId: string,
+  txHash: string
+): Promise<boolean> {
+  await ensureNeonShop();
+  const sql = getSql();
+  const taken = await sql`
+    SELECT id FROM orders WHERE tx_hash = ${txHash} AND id <> ${orderId} LIMIT 1
+  `;
+  if (taken.length) return false;
+  const existing = await sql`SELECT * FROM orders WHERE id = ${orderId} LIMIT 1`;
+  const row = existing[0] as Record<string, unknown> | undefined;
+  if (!row) return false;
+  const order = asOrder(row);
+  if (order.status === "paid") {
+    return (order.tx_hash ?? "").toLowerCase() === txHash.toLowerCase();
+  }
+  const now = new Date().toISOString();
+  const updated = await sql`
+    UPDATE orders
+       SET status = 'paid',
+           tx_hash = ${txHash},
+           paid_at = ${now}::timestamptz
+     WHERE id = ${orderId}
+       AND status IN ('pending', 'expired')
+     RETURNING id
+  `;
+  if (!updated.length) return false;
+  await sql`
+    UPDATE vouchers
+       SET status = 'sold',
+           sold_at = ${now}::timestamptz
+     WHERE order_id = ${orderId} AND status = 'reserved'
+  `;
+  const attached = await sql`
+    SELECT COUNT(*)::int AS count
+      FROM vouchers
+     WHERE order_id = ${orderId} AND status = 'sold'
+  `;
+  const need = order.quantity - Number((attached[0] as { count: number }).count);
+  if (need > 0) {
+    await sql`
+      UPDATE vouchers
+         SET status = 'sold',
+             order_id = ${orderId},
+             sold_at = ${now}::timestamptz
+       WHERE id IN (
+         SELECT id
+           FROM vouchers
+          WHERE product_id = ${order.product_id}
+            AND status = 'available'
+            AND order_id IS NULL
+          ORDER BY id
+          LIMIT ${need}
+       )
+    `;
+  }
+  const paid = await neonGetOrder(orderId);
+  return paid?.status === "paid";
 }
 
 export async function neonGetOrder(id: string): Promise<Order | undefined> {

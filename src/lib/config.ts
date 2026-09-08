@@ -20,7 +20,11 @@ export const USDC_DECIMALS = 6;
 export const DEMO_AUTO_PAY =
   (process.env.NEXT_PUBLIC_DEMO_AUTO_PAY ?? process.env.DEMO_AUTO_PAY) !== "0";
 export const DEMO_AUTO_PAY_MS = Number(process.env.DEMO_AUTO_PAY_MS ?? "8000");
-export const ORDER_TTL_MS = Number(process.env.ORDER_TTL_MS ?? String(30 * 60 * 1000));
+const orderTtlRaw = Number(process.env.ORDER_TTL_MS);
+export const ORDER_TTL_MS =
+  Number.isFinite(orderTtlRaw) && orderTtlRaw >= 60_000
+    ? orderTtlRaw
+    : 30 * 60 * 1000;
 
 export const ADMIN_COOKIE = "vs_admin";
 

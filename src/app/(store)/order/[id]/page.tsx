@@ -1,37 +1,17 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { notFound } from "next/navigation";
 import { CopyButton } from "@/components/copy-button";
 import { GiftCardArt } from "@/components/gift-card-art";
 import { formatUsd } from "@/lib/config";
-import type { PublicOrder } from "@/lib/order-view";
+import { loadPublicOrder } from "@/lib/order-view";
 
-export default function VoucherDisplayPage() {
-  const params = useParams<{ id: string }>();
-  const [order, setOrder] = useState<PublicOrder | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    let timer = 0;
-    async function load() {
-      const res = await fetch(`/api/orders/${params.id}`);
-      const data = (await res.json()) as { order?: PublicOrder };
-      if (!active) return;
-      setOrder(data.order ?? null);
-      if (data.order?.status === "paid" && timer) window.clearInterval(timer);
-    }
-    load();
-    timer = window.setInterval(load, 2000);
-    return () => {
-      active = false;
-      window.clearInterval(timer);
-    };
-  }, [params.id]);
-
-  if (!order) {
-    return <div className="px-4 py-16 text-center text-muted">Loading...</div>;
-  }
+export default async function VoucherDisplayPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const order = await loadPublicOrder(id);
+  if (!order) notFound();
 
   const ready = order.status === "paid" && order.voucherCodes.length > 0;
   const count = order.voucherCodes.length;
