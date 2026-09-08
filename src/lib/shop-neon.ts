@@ -111,6 +111,8 @@ const DDL = [
   `CREATE UNIQUE INDEX IF NOT EXISTS orders_live_hd_idx
      ON orders (derivation_index)
      WHERE status IN ('pending', 'paid', 'expired')`,
+  `CREATE SEQUENCE IF NOT EXISTS orders_hd_index_seq
+     AS INTEGER MINVALUE 0 START WITH 0`,
   `CREATE OR REPLACE FUNCTION reserve_shop_order(
      p_id TEXT,
      p_product_id INTEGER,
@@ -159,6 +161,19 @@ async function applySchema() {
   for (const statement of DDL) {
     await sql.query(statement);
   }
+  // Park the sequence past every index already on disk, and never behind
+  // where it already stands, so a redeploy cannot hand out a live index twice.
+  await sql.query(`
+    SELECT setval(
+      'orders_hd_index_seq',
+      GREATEST(
+        (SELECT COALESCE(MAX(derivation_index) + 1, 0) FROM orders),
+        (SELECT last_value + CASE WHEN is_called THEN 1 ELSE 0 END
+           FROM orders_hd_index_seq)
+      ),
+      false
+    )
+  `);
 }
 
 async function seedIfEmpty() {
@@ -289,14 +304,10 @@ export async function neonCountAvailable(productId: number): Promise<number> {
   return Number((rows[0] as { count: number }).count);
 }
 
-export async function neonHeldIndexes(): Promise<number[]> {
+export async function neonAllocateHdIndex(): Promise<number> {
   await ensureNeonShop();
-  const rows = await getSql()`
-    SELECT derivation_index
-      FROM orders
-     WHERE status IN ('pending', 'paid', 'expired')
-  `;
-  return rows.map((row) => Number((row as { derivation_index: number }).derivation_index));
+  const rows = await getSql()`SELECT nextval('orders_hd_index_seq')::int AS index`;
+  return Number((rows[0] as { index: number }).index);
 }
 
 export async function neonCreateOrder(input: {

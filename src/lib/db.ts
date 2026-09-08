@@ -356,48 +356,40 @@ export async function createOrder(input: {
   if (input.id && !claims) throw new Error("Invalid order id");
 
   if (usingNeon()) {
-    const derivationIndex =
-      claims?.derivationIndex ??
-      allocateHdIndex(await neonShop.neonHeldIndexes());
-    const id =
-      input.id ??
-      issueOrderToken({
-        slug: product.slug,
-        quantity,
-        createdAtMs,
-        derivationIndex,
-      });
-    try {
-      return await neonShop.neonCreateOrder({
-        id,
+    const place = (derivationIndex: number, mintedAtMs: number, id?: string) =>
+      neonShop.neonCreateOrder({
+        id:
+          id ??
+          issueOrderToken({
+            slug: product.slug,
+            quantity,
+            createdAtMs: mintedAtMs,
+            derivationIndex,
+          }),
         productId: input.productId,
         quantity,
         buyerAddress: input.buyerAddress,
         amountMicro: product.price_micro * quantity,
-        createdAt: new Date(createdAtMs).toISOString(),
+        createdAt: new Date(mintedAtMs).toISOString(),
         derivationIndex,
       });
+
+    // Postgres hands out the index in one statement, so concurrent buyers
+    // cannot read the same free slot and both claim it.
+    const derivationIndex =
+      claims?.derivationIndex ?? (await neonShop.neonAllocateHdIndex());
+    try {
+      return await place(derivationIndex, createdAtMs, input.id);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      if (message.includes("orders_live_hd")) {
-        const retryIndex = allocateHdIndex(await neonShop.neonHeldIndexes());
-        const retryId = issueOrderToken({
-          slug: product.slug,
-          quantity,
-          createdAtMs: Date.now(),
-          derivationIndex: retryIndex,
-        });
-        return neonShop.neonCreateOrder({
-          id: retryId,
-          productId: input.productId,
-          quantity,
-          buyerAddress: input.buyerAddress,
-          amountMicro: product.price_micro * quantity,
-          createdAt: new Date().toISOString(),
-          derivationIndex: retryIndex,
-        });
-      }
-      throw error;
+      const clash =
+        message.includes("orders_live_hd") || message.includes("orders_pkey");
+      // A caller-supplied token names one specific order, so a clash there is
+      // a real error, not something to paper over with a second order.
+      if (!clash || input.id) throw error;
+      // Our own index clashed, which means the sequence sits behind a row on
+      // disk. A fresh value is free by construction.
+      return place(await neonShop.neonAllocateHdIndex(), Date.now());
     }
   }
 
